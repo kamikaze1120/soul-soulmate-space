@@ -59,6 +59,12 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-mode-matrimonial: var(--mode-matrimonial);
+  --color-mode-matrimonial-foreground: var(--mode-matrimonial-foreground);
+  --color-mode-sisterhood: var(--mode-sisterhood);
+  --color-mode-sisterhood-foreground: var(--mode-sisterhood-foreground);
+  --color-mode-brotherhood: var(--mode-brotherhood);
+  --color-mode-brotherhood-foreground: var(--mode-brotherhood-foreground);
 }
 
 :root {
