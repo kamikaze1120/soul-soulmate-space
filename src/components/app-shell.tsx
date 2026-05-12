@@ -3,7 +3,6 @@ import { Home, Compass, MessageCircle, User, Heart, Users, ShieldCheck, ChevronD
 import { useAuth } from "@/lib/auth";
 import { useActiveMode } from "@/lib/active-mode";
 import { MODES, type AppMode } from "@/lib/modes";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
