@@ -11,7 +11,7 @@ export const MODES: Record<AppMode, {
 }> = {
   matrimonial: {
     id: "matrimonial",
-    title: "Matrimonial",
+    title: "Nikah",
     tagline: "Marriage with intention",
     description: "Connect with verified Muslims seeking marriage. Wali-friendly, modesty-first.",
     genderLock: null,

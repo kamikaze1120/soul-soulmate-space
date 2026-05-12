@@ -16,9 +16,9 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/_app/profile'
 import { Route as AuthenticatedAppModesRouteImport } from './routes/_authenticated/_app/modes'
-import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/_app/messages'
 import { Route as AuthenticatedAppFeedRouteImport } from './routes/_authenticated/_app/feed'
 import { Route as AuthenticatedAppDiscoverRouteImport } from './routes/_authenticated/_app/discover'
+import { Route as AuthenticatedAppMessagesIndexRouteImport } from './routes/_authenticated/_app/messages.index'
 import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/_app/messages.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -54,12 +54,6 @@ const AuthenticatedAppModesRoute = AuthenticatedAppModesRouteImport.update({
   path: '/modes',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppMessagesRoute =
-  AuthenticatedAppMessagesRouteImport.update({
-    id: '/messages',
-    path: '/messages',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
 const AuthenticatedAppFeedRoute = AuthenticatedAppFeedRouteImport.update({
   id: '/feed',
   path: '/feed',
@@ -71,11 +65,17 @@ const AuthenticatedAppDiscoverRoute =
     path: '/discover',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppMessagesIndexRoute =
+  AuthenticatedAppMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppMessagesIdRoute =
   AuthenticatedAppMessagesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedAppMessagesRoute,
+    id: '/messages/$id',
+    path: '/messages/$id',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -84,10 +84,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discover': typeof AuthenticatedAppDiscoverRoute
   '/feed': typeof AuthenticatedAppFeedRoute
-  '/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/modes': typeof AuthenticatedAppModesRoute
   '/profile': typeof AuthenticatedAppProfileRoute
   '/messages/$id': typeof AuthenticatedAppMessagesIdRoute
+  '/messages/': typeof AuthenticatedAppMessagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -95,10 +95,10 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discover': typeof AuthenticatedAppDiscoverRoute
   '/feed': typeof AuthenticatedAppFeedRoute
-  '/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/modes': typeof AuthenticatedAppModesRoute
   '/profile': typeof AuthenticatedAppProfileRoute
   '/messages/$id': typeof AuthenticatedAppMessagesIdRoute
+  '/messages': typeof AuthenticatedAppMessagesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -109,10 +109,10 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/_app/discover': typeof AuthenticatedAppDiscoverRoute
   '/_authenticated/_app/feed': typeof AuthenticatedAppFeedRoute
-  '/_authenticated/_app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/_authenticated/_app/modes': typeof AuthenticatedAppModesRoute
   '/_authenticated/_app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/_app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
+  '/_authenticated/_app/messages/': typeof AuthenticatedAppMessagesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -122,10 +122,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/discover'
     | '/feed'
-    | '/messages'
     | '/modes'
     | '/profile'
     | '/messages/$id'
+    | '/messages/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,10 +133,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/discover'
     | '/feed'
-    | '/messages'
     | '/modes'
     | '/profile'
     | '/messages/$id'
+    | '/messages'
   id:
     | '__root__'
     | '/'
@@ -146,10 +146,10 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/_app/discover'
     | '/_authenticated/_app/feed'
-    | '/_authenticated/_app/messages'
     | '/_authenticated/_app/modes'
     | '/_authenticated/_app/profile'
     | '/_authenticated/_app/messages/$id'
+    | '/_authenticated/_app/messages/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -209,13 +209,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppModesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/_app/messages': {
-      id: '/_authenticated/_app/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof AuthenticatedAppMessagesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/_app/feed': {
       id: '/_authenticated/_app/feed'
       path: '/feed'
@@ -230,44 +223,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDiscoverRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/messages/': {
+      id: '/_authenticated/_app/messages/'
+      path: '/messages'
+      fullPath: '/messages/'
+      preLoaderRoute: typeof AuthenticatedAppMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/messages/$id': {
       id: '/_authenticated/_app/messages/$id'
-      path: '/$id'
+      path: '/messages/$id'
       fullPath: '/messages/$id'
       preLoaderRoute: typeof AuthenticatedAppMessagesIdRouteImport
-      parentRoute: typeof AuthenticatedAppMessagesRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
   }
 }
 
-interface AuthenticatedAppMessagesRouteChildren {
-  AuthenticatedAppMessagesIdRoute: typeof AuthenticatedAppMessagesIdRoute
-}
-
-const AuthenticatedAppMessagesRouteChildren: AuthenticatedAppMessagesRouteChildren =
-  {
-    AuthenticatedAppMessagesIdRoute: AuthenticatedAppMessagesIdRoute,
-  }
-
-const AuthenticatedAppMessagesRouteWithChildren =
-  AuthenticatedAppMessagesRoute._addFileChildren(
-    AuthenticatedAppMessagesRouteChildren,
-  )
-
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDiscoverRoute: typeof AuthenticatedAppDiscoverRoute
   AuthenticatedAppFeedRoute: typeof AuthenticatedAppFeedRoute
-  AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRouteWithChildren
   AuthenticatedAppModesRoute: typeof AuthenticatedAppModesRoute
   AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
+  AuthenticatedAppMessagesIdRoute: typeof AuthenticatedAppMessagesIdRoute
+  AuthenticatedAppMessagesIndexRoute: typeof AuthenticatedAppMessagesIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDiscoverRoute: AuthenticatedAppDiscoverRoute,
   AuthenticatedAppFeedRoute: AuthenticatedAppFeedRoute,
-  AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRouteWithChildren,
   AuthenticatedAppModesRoute: AuthenticatedAppModesRoute,
   AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
+  AuthenticatedAppMessagesIdRoute: AuthenticatedAppMessagesIdRoute,
+  AuthenticatedAppMessagesIndexRoute: AuthenticatedAppMessagesIndexRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
