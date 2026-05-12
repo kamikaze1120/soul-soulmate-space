@@ -12,11 +12,13 @@ type Ctx = {
 const ActiveModeContext = createContext<Ctx | undefined>(undefined);
 
 export function ActiveModeProvider({ children }: { children: ReactNode }) {
-  const { profile } = useAuth();
-  const available = useMemo(
-    () => visibleModes(profile?.verified_gender ?? null),
-    [profile?.verified_gender],
-  );
+  const { profile, entitlements } = useAuth();
+  const available = useMemo(() => {
+    const base = new Set<AppMode>(visibleModes(profile?.verified_gender ?? null));
+    // Any mode the user has an active entitlement for is unlocked, regardless of gender lock.
+    for (const e of entitlements) if (e.is_active) base.add(e.mode);
+    return Array.from(base);
+  }, [profile?.verified_gender, entitlements]);
   const [active, setActive] = useState<AppMode>("matrimonial");
 
   // Keep active in-bounds

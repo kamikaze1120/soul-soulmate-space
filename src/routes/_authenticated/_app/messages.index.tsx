@@ -4,7 +4,7 @@ import { Search, PenSquare } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
 import { THREADS, personById } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/_authenticated/_app/messages")({
+export const Route = createFileRoute("/_authenticated/_app/messages/")({
   head: () => ({ meta: [{ title: "Chats · Ummah" }] }),
   component: MessagesPage,
 });
