@@ -14,16 +14,144 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      mode_entitlements: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          is_active: boolean
+          is_trial: boolean
+          mode: Database["public"]["Enums"]["app_mode"]
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          is_active?: boolean
+          is_trial?: boolean
+          mode: Database["public"]["Enums"]["app_mode"]
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          is_active?: boolean
+          is_trial?: boolean
+          mode?: Database["public"]["Enums"]["app_mode"]
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          bio: string | null
+          blur_photos: boolean
+          city: string | null
+          country: string | null
+          created_at: string
+          display_name: string | null
+          has_kids: boolean
+          id: string
+          is_verified: boolean
+          kids_age_groups: string[] | null
+          latitude: number | null
+          liveness_video_path: string | null
+          longitude: number | null
+          marital_status: Database["public"]["Enums"]["marital_status"] | null
+          primary_mode: Database["public"]["Enums"]["app_mode"] | null
+          updated_at: string
+          verified_gender: Database["public"]["Enums"]["gender"] | null
+          wali_contact: string | null
+        }
+        Insert: {
+          bio?: string | null
+          blur_photos?: boolean
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          display_name?: string | null
+          has_kids?: boolean
+          id: string
+          is_verified?: boolean
+          kids_age_groups?: string[] | null
+          latitude?: number | null
+          liveness_video_path?: string | null
+          longitude?: number | null
+          marital_status?: Database["public"]["Enums"]["marital_status"] | null
+          primary_mode?: Database["public"]["Enums"]["app_mode"] | null
+          updated_at?: string
+          verified_gender?: Database["public"]["Enums"]["gender"] | null
+          wali_contact?: string | null
+        }
+        Update: {
+          bio?: string | null
+          blur_photos?: boolean
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          display_name?: string | null
+          has_kids?: boolean
+          id?: string
+          is_verified?: boolean
+          kids_age_groups?: string[] | null
+          latitude?: number | null
+          liveness_video_path?: string | null
+          longitude?: number | null
+          marital_status?: Database["public"]["Enums"]["marital_status"] | null
+          primary_mode?: Database["public"]["Enums"]["app_mode"] | null
+          updated_at?: string
+          verified_gender?: Database["public"]["Enums"]["gender"] | null
+          wali_contact?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_mode: "matrimonial" | "sisterhood" | "brotherhood"
+      app_role: "admin" | "user"
+      gender: "male" | "female"
+      marital_status: "single" | "divorced" | "separated" | "widowed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +278,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_mode: ["matrimonial", "sisterhood", "brotherhood"],
+      app_role: ["admin", "user"],
+      gender: ["male", "female"],
+      marital_status: ["single", "divorced", "separated", "widowed"],
+    },
   },
 } as const
