@@ -142,6 +142,3 @@ export function ModeBadge({ mode, className }: { mode: AppMode; className?: stri
   );
 }
 
-export function unused() {
-  return Button;
-}
