@@ -12,6 +12,7 @@ export type Person = {
   modes: AppMode[];
   verified: boolean;
   walied?: boolean;
+  isWali?: boolean;
   kidsAges?: string[];
 };
 
@@ -28,12 +29,16 @@ export type FeedPost = {
 
 export type Thread = {
   id: string;
-  personId: string;
+  kind: "dm" | "group";
+  mode: AppMode;
   lastMessage: string;
   timeAgo: string;
   unread: number;
   online: boolean;
-  mode: AppMode;
+  personId?: string;       // DM
+  members?: string[];      // group: includes wali
+  title?: string;          // group display title
+  hasWali?: boolean;       // marker for Nikah groups
 };
 
 export type Message = {
@@ -42,6 +47,8 @@ export type Message = {
   fromMe: boolean;
   text: string;
   time: string;
+  fromId?: string;         // for group messages
+  system?: boolean;        // system notice (e.g. "Wali added")
 };
 
 const img = (seed: string, w = 800, h = 800) =>
@@ -125,6 +132,19 @@ export const PEOPLE: Person[] = [
     verified: false,
     kidsAges: ["0-2"],
   },
+  {
+    id: "wali-1",
+    name: "Br. Omar (Wali)",
+    age: 58,
+    city: "Toronto",
+    bio: "Father of Aaliyah",
+    avatar: img("1507003211169-0a1dd7228f2d", 400, 400),
+    cover: img("1502323777036-f29e3972d82f", 800, 1100),
+    gender: "male",
+    modes: ["matrimonial"],
+    verified: true,
+    isWali: true,
+  },
 ];
 
 export const FEED: FeedPost[] = [
@@ -171,17 +191,30 @@ export const FEED: FeedPost[] = [
 ];
 
 export const THREADS: Thread[] = [
-  { id: "t1", personId: "p1", lastMessage: "As-salāmu ʿalaykum, my wali is copied here.", timeAgo: "3m", unread: 2, online: true, mode: "matrimonial" },
-  { id: "t2", personId: "p2", lastMessage: "Saturday playdate confirmed 🎈", timeAgo: "1h", unread: 0, online: true, mode: "sisterhood" },
-  { id: "t3", personId: "p3", lastMessage: "Brothers' BBQ this Sunday — count me in", timeAgo: "4h", unread: 1, online: false, mode: "brotherhood" },
-  { id: "t4", personId: "p4", lastMessage: "JazākAllāh khair for the reminder.", timeAgo: "1d", unread: 0, online: false, mode: "matrimonial" },
+  {
+    id: "t1",
+    kind: "group",
+    mode: "matrimonial",
+    title: "Aaliyah · Wali present",
+    members: ["p1", "wali-1"],
+    hasWali: true,
+    lastMessage: "Br. Omar joined the conversation.",
+    timeAgo: "3m",
+    unread: 2,
+    online: true,
+  },
+  { id: "t2", kind: "dm", personId: "p2", mode: "sisterhood", lastMessage: "Saturday playdate confirmed 🎈", timeAgo: "1h", unread: 0, online: true },
+  { id: "t3", kind: "dm", personId: "p3", mode: "brotherhood", lastMessage: "Brothers' BBQ this Sunday — count me in", timeAgo: "4h", unread: 1, online: false },
+  { id: "t4", kind: "dm", personId: "p4", mode: "matrimonial", lastMessage: "JazākAllāh khair for the reminder.", timeAgo: "1d", unread: 0, online: false },
 ];
 
 export const MESSAGES: Record<string, Message[]> = {
   t1: [
-    { id: "m1", threadId: "t1", fromMe: false, text: "As-salāmu ʿalaykum 🌷", time: "10:02" },
+    { id: "m1", threadId: "t1", fromMe: false, fromId: "p1", text: "As-salāmu ʿalaykum 🌷", time: "10:02" },
     { id: "m2", threadId: "t1", fromMe: true, text: "Wa ʿalaykum as-salām. JazākAllāh for connecting.", time: "10:04" },
-    { id: "m3", threadId: "t1", fromMe: false, text: "My wali is copied on this conversation, in shaa Allah.", time: "10:05" },
+    { id: "m3", threadId: "t1", fromMe: false, fromId: "p1", text: "I'm adding my wali to this chat, in shaa Allah.", time: "10:05" },
+    { id: "m4", threadId: "t1", system: true, fromMe: false, text: "Br. Omar (Wali) joined the conversation.", time: "10:05" },
+    { id: "m5", threadId: "t1", fromMe: false, fromId: "wali-1", text: "As-salāmu ʿalaykum. Pleased to make your acquaintance.", time: "10:08" },
   ],
   t2: [
     { id: "m1", threadId: "t2", fromMe: false, text: "Park at 11? Bring snacks 🍓", time: "9:14" },
@@ -198,4 +231,14 @@ export const MESSAGES: Record<string, Message[]> = {
 
 export function personById(id: string) {
   return PEOPLE.find((p) => p.id === id)!;
+}
+
+export function threadTitle(t: Thread): string {
+  if (t.kind === "group") return t.title ?? "Group";
+  return personById(t.personId!).name;
+}
+
+export function threadAvatars(t: Thread): string[] {
+  if (t.kind === "group") return (t.members ?? []).map((id) => personById(id).avatar);
+  return [personById(t.personId!).avatar];
 }

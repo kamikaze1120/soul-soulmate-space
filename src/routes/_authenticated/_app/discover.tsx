@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/_app/discover")({
 
 function DiscoverPage() {
   const { active } = useActiveMode();
-  const deck = useMemo(() => PEOPLE.filter((p) => p.modes.includes(active)), [active]);
+  const deck = useMemo(() => PEOPLE.filter((p) => p.modes.includes(active) && !p.isWali), [active]);
   const [index, setIndex] = useState(0);
   const [blur, setBlur] = useState(active === "matrimonial");
 
@@ -29,16 +29,18 @@ function DiscoverPage() {
   const meta = MODES[active];
 
   return (
-    <div className="px-4 pt-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div className="px-5 pt-6">
+      <div className="mb-5 flex items-end justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">{meta.title}</h2>
-          <p className="text-xs text-muted-foreground">{meta.tagline}</p>
+          <p className="eyebrow text-muted-foreground">Discover · {meta.tagline}</p>
+          <h2 className="font-display mt-1 text-3xl font-medium tracking-tight text-foreground">
+            {meta.title}
+          </h2>
         </div>
         {active === "matrimonial" && (
           <button
             onClick={() => setBlur((b) => !b)}
-            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium"
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium shadow-[var(--shadow-soft)]"
           >
             {blur ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             {blur ? "Modesty on" : "Modesty off"}
@@ -46,12 +48,12 @@ function DiscoverPage() {
         )}
       </div>
 
-      <div className="relative mx-auto h-[520px] w-full max-w-sm">
+      <div className="relative mx-auto h-[540px] w-full max-w-sm">
         {!current && (
-          <div className="grid h-full place-items-center rounded-3xl border border-dashed border-border bg-card text-center">
+          <div className="grid h-full place-items-center rounded-[var(--radius-2xl)] border border-dashed border-border bg-card text-center">
             <div className="px-6">
-              <p className="font-semibold text-foreground">You're all caught up</p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="font-display text-2xl font-medium tracking-tight text-foreground">You're all caught up.</p>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Come back later — new {meta.title.toLowerCase()} profiles every day.
               </p>
             </div>
@@ -62,7 +64,7 @@ function DiscoverPage() {
       </div>
 
       {current && (
-        <div className="mt-6 flex items-center justify-center gap-5">
+        <div className="mt-7 flex items-center justify-center gap-5">
           <ActionBtn onClick={() => advance("Passed on")} label="Pass" tone="muted">
             <X className="h-7 w-7" />
           </ActionBtn>
@@ -81,8 +83,8 @@ function DiscoverPage() {
 function Card({ person, blur, stacked }: { person: Person; blur?: boolean; stacked?: boolean }) {
   return (
     <div
-      className={`absolute inset-0 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-elevated)] transition ${
-        stacked ? "scale-95 opacity-60 -translate-y-3" : ""
+      className={`absolute inset-0 overflow-hidden rounded-[var(--radius-2xl)] border border-border bg-card shadow-[var(--shadow-elevated)] transition ${
+        stacked ? "scale-95 opacity-50 -translate-y-3" : ""
       }`}
     >
       <img
@@ -90,25 +92,25 @@ function Card({ person, blur, stacked }: { person: Person; blur?: boolean; stack
         alt={person.name}
         className={`h-full w-full object-cover transition ${blur ? "blur-xl scale-110" : ""}`}
       />
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 text-white">
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 text-white">
         <div className="flex items-center gap-2">
-          <h3 className="text-2xl font-semibold leading-tight">
-            {person.name}, {person.age}
+          <h3 className="font-display text-3xl font-medium leading-tight tracking-tight">
+            {person.name}, <span className="italic font-light">{person.age}</span>
           </h3>
           {person.verified && <BadgeCheck className="h-5 w-5 text-[var(--accent)]" />}
         </div>
         <div className="mt-1 flex items-center gap-1.5 text-sm text-white/85">
           <MapPin className="h-3.5 w-3.5" /> {person.city}
         </div>
-        <p className="mt-2 line-clamp-2 text-sm text-white/85">{person.bio}</p>
+        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-white/85">{person.bio}</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {person.walied && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] backdrop-blur">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] backdrop-blur">
               <ShieldCheck className="h-3 w-3" /> Wali linked
             </span>
           )}
           {person.kidsAges?.map((g) => (
-            <span key={g} className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] backdrop-blur">
+            <span key={g} className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] backdrop-blur">
               kids {g}
             </span>
           ))}
@@ -134,7 +136,7 @@ function ActionBtn({
   const sizes = small ? "h-12 w-12" : "h-16 w-16";
   const styles =
     tone === "primary"
-      ? "bg-[var(--mode-matrimonial)] text-primary-foreground"
+      ? "bg-[var(--gradient-plum)] text-primary-foreground"
       : tone === "gold"
         ? "bg-[var(--gradient-gold)] text-accent-foreground"
         : "bg-card text-muted-foreground border border-border";
@@ -142,7 +144,7 @@ function ActionBtn({
     <button
       onClick={onClick}
       aria-label={label}
-      className={`grid place-items-center rounded-full shadow-[var(--shadow-elevated)] transition active:scale-90 ${sizes} ${styles}`}
+      className={`grid place-items-center rounded-full shadow-[var(--shadow-elevated)] transition active:scale-90 hover:-translate-y-0.5 ${sizes} ${styles}`}
     >
       {children}
     </button>
