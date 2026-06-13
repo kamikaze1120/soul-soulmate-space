@@ -156,7 +156,9 @@ Never hardcode hex/`text-white` etc. — always go through tokens.
 | HIBP leaked-password check | ✅ Enabled |
 | Service role key client exposure | ✅ Blocked | `*.server.ts` filename enforcement |
 | Form input validation | ✅ | zod schema on auth forms (length + email + trim) |
-| Storage policies for liveness videos | ⏳ TODO | Bucket not yet created |
+| Storage policies for liveness videos | ✅ Fixed | Private bucket `verification-videos`, owner-only path `<uid>/<file>` |
+| Storage policies for profile photos | ✅ Fixed | Private bucket `profile-photos`, same owner-only convention |
+| Security headers (HSTS / CSP / XFO / etc.) | ✅ Fixed | Applied to every Worker response in `src/server.ts` |
 | `requireSupabaseAuth` global default | ⏳ Deferred | No protected server fns yet; will add when first one lands |
 | Rate-limit on auth | ✅ via Supabase | Native Supabase Auth throttling |
 
