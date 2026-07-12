@@ -1,14 +1,17 @@
 export type AppMode = "matrimonial" | "sisterhood" | "brotherhood";
 export type Gender = "male" | "female";
 
-export const MODES: Record<AppMode, {
-  id: AppMode;
-  title: string;
-  tagline: string;
-  description: string;
-  genderLock: Gender | null;
-  tokenClass: string;
-}> = {
+export const MODES: Record<
+  AppMode,
+  {
+    id: AppMode;
+    title: string;
+    tagline: string;
+    description: string;
+    genderLock: Gender | null;
+    tokenClass: string;
+  }
+> = {
   matrimonial: {
     id: "matrimonial",
     title: "Nikah",
@@ -42,11 +45,13 @@ export const PRICING = {
   trialDays: 7,
 };
 
-export function visibleModes(gender: Gender | null): AppMode[] {
-  const all: AppMode[] = ["matrimonial", "sisterhood", "brotherhood"];
-  if (!gender) return ["matrimonial"]; // unverified — only matrimonial visible until verification
-  return all.filter((m) => {
-    const lock = MODES[m].genderLock;
-    return lock === null || lock === gender;
-  });
+// Nikah (matrimonial) is the highest-stakes mode — opposite-gender matching,
+// wali involvement — so it stays locked until Stripe Identity verification.
+// Sisterhood/Brotherhood are peer-community spaces, gender-gated only.
+export function visibleModes(gender: Gender | null, isVerified: boolean): AppMode[] {
+  const modes: AppMode[] = [];
+  if (isVerified) modes.push("matrimonial");
+  if (gender === "female") modes.push("sisterhood");
+  if (gender === "male") modes.push("brotherhood");
+  return modes;
 }

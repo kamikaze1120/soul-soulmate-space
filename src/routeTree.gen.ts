@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/_app/profile'
@@ -34,6 +35,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
   '/discover': typeof AuthenticatedAppDiscoverRoute
   '/feed': typeof AuthenticatedAppFeedRoute
   '/modes': typeof AuthenticatedAppModesRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
   '/discover': typeof AuthenticatedAppDiscoverRoute
   '/feed': typeof AuthenticatedAppFeedRoute
   '/modes': typeof AuthenticatedAppModesRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/_app/discover': typeof AuthenticatedAppDiscoverRoute
   '/_authenticated/_app/feed': typeof AuthenticatedAppFeedRoute
   '/_authenticated/_app/modes': typeof AuthenticatedAppModesRoute
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/onboarding'
     | '/discover'
     | '/feed'
     | '/modes'
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/onboarding'
     | '/discover'
     | '/feed'
     | '/modes'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/_app'
     | '/_authenticated/dashboard'
+    | '/_authenticated/onboarding'
     | '/_authenticated/_app/discover'
     | '/_authenticated/_app/feed'
     | '/_authenticated/_app/modes'
@@ -180,6 +192,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -264,11 +283,13 @@ const AuthenticatedAppRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -282,3 +303,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

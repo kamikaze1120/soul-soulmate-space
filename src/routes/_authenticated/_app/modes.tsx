@@ -20,7 +20,10 @@ const ICONS: Record<AppMode, React.ReactNode> = {
 function ModesPage() {
   const { profile, entitlements } = useAuth();
   const { active, setActive } = useActiveMode();
-  const visible = useMemo(() => visibleModes(profile?.verified_gender ?? null), [profile]);
+  const visible = useMemo(
+    () => visibleModes(profile?.verified_gender ?? null, profile?.is_verified ?? false),
+    [profile],
+  );
   const entMap = new Map(entitlements.map((e) => [e.mode, e]));
   const activeCount = entitlements.filter((e) => e.is_active).length;
 
@@ -43,7 +46,10 @@ function ModesPage() {
 
           if (!isVisible) {
             return (
-              <div key={m} className="rounded-2xl border border-dashed border-border bg-card/60 p-4 opacity-70">
+              <div
+                key={m}
+                className="rounded-2xl border border-dashed border-border bg-card/60 p-4 opacity-70"
+              >
                 <div className="flex items-center gap-3">
                   <div className="grid h-10 w-10 place-items-center rounded-xl bg-muted text-muted-foreground">
                     <Lock className="h-5 w-5" />
@@ -51,7 +57,9 @@ function ModesPage() {
                   <div className="flex-1">
                     <div className="font-semibold text-foreground">{meta.title}</div>
                     <div className="text-xs text-muted-foreground">
-                      Restricted — verified {meta.genderLock} only
+                      {m === "matrimonial"
+                        ? "Restricted — complete identity verification to unlock"
+                        : `Restricted — verified ${meta.genderLock} only`}
                     </div>
                   </div>
                 </div>
@@ -108,7 +116,11 @@ function ModesPage() {
                       ) : (
                         <>
                           <button
-                            onClick={() => toast.info("Stripe checkout coming soon — payments will be wired up next.")}
+                            onClick={() =>
+                              toast.info(
+                                "Stripe checkout coming soon — payments will be wired up next.",
+                              )
+                            }
                             className="inline-flex items-center gap-1.5 rounded-full bg-[var(--mode-matrimonial)] px-4 py-1.5 text-xs font-semibold text-primary-foreground"
                           >
                             <Sparkles className="h-3.5 w-3.5" />

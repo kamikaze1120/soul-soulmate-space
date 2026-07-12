@@ -1,7 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Phone, Video, Send, Plus, Smile, ShieldCheck, UserPlus, Users as UsersIcon } from "lucide-react";
-import { THREADS, MESSAGES, personById, threadTitle, type Message, type Thread } from "@/lib/mock-data";
+import { ArrowLeft, Send, Plus, Smile, ShieldCheck, Users as UsersIcon } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { useThreads } from "@/lib/queries/threads";
+import { useMessages, useSendMessage } from "@/lib/queries/messages";
+import { useMessagesSubscription } from "@/lib/realtime/use-messages-subscription";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/messages/$id")({
@@ -11,71 +14,60 @@ export const Route = createFileRoute("/_authenticated/_app/messages/$id")({
 
 function ThreadPage() {
   const { id } = Route.useParams();
-  const initialThread = THREADS.find((t) => t.id === id);
-  if (!initialThread) throw notFound();
-
-  const [thread, setThread] = useState<Thread>(initialThread);
-  const initial = MESSAGES[id] ?? [];
-  const [msgs, setMsgs] = useState<Message[]>(initial);
+  const { user } = useAuth();
   const [text, setText] = useState("");
 
-  const send = () => {
+  // Threads aren't fetched by id directly (no single-thread hook yet) — pull
+  // from whichever mode's thread list already has it cached/loaded.
+  const matrimonial = useThreads("matrimonial");
+  const sisterhood = useThreads("sisterhood");
+  const brotherhood = useThreads("brotherhood");
+  const thread =
+    matrimonial.data?.find((t) => t.id === id) ??
+    sisterhood.data?.find((t) => t.id === id) ??
+    brotherhood.data?.find((t) => t.id === id);
+
+  const { data: messages } = useMessages(id);
+  const sendMessage = useSendMessage(id);
+  useMessagesSubscription(id);
+
+  const send = async () => {
     const trimmed = text.trim();
     if (!trimmed) return;
     if (trimmed.length > 1000) return toast.error("Message is too long (max 1000 chars).");
-    setMsgs((m) => [
-      ...m,
-      { id: crypto.randomUUID(), threadId: id, fromMe: true, text: trimmed, time: "now" },
-    ]);
-    setText("");
+    try {
+      await sendMessage.mutateAsync(trimmed);
+      setText("");
+    } catch {
+      toast.error("Couldn't send that message.");
+    }
   };
+
+  if (!thread) {
+    return (
+      <div className="px-6 py-16 text-center text-sm text-muted-foreground">
+        Loading conversation…
+      </div>
+    );
+  }
 
   const isMatri = thread.mode === "matrimonial";
   const isGroup = thread.kind === "group";
-
-  const addWali = () => {
-    if (isGroup) return;
-    setThread((t) => ({
-      ...t,
-      kind: "group",
-      title: `${personById(t.personId!).name} · Wali present`,
-      members: [t.personId!, "wali-1"],
-      hasWali: true,
-    }));
-    setMsgs((m) => [
-      ...m,
-      {
-        id: crypto.randomUUID(),
-        threadId: id,
-        fromMe: false,
-        system: true,
-        text: "Br. Omar (Wali) joined the conversation.",
-        time: "now",
-      },
-    ]);
-    toast.success("Wali added to conversation");
-  };
-
-  // Header data
-  const headerAvatar = isGroup
-    ? personById(thread.members![0]).avatar
-    : personById(thread.personId!).avatar;
-  const headerTitle = threadTitle(thread);
+  const headerTitle = isGroup
+    ? (thread.title ?? "Group")
+    : (thread.otherMembers[0]?.display_name ?? "Conversation");
+  const headerAvatar = thread.otherMembers[0]?.avatarUrl;
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col bg-[var(--app-canvas)]">
-      {/* Thread header */}
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border/50 bg-background/90 px-4 py-3 backdrop-blur">
         <Link to="/messages" className="rounded-full p-2 hover:bg-muted">
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        {isGroup ? (
-          <div className="relative h-10 w-10 shrink-0">
-            <img src={personById(thread.members![0]).avatar} alt="" className="absolute left-0 top-0 h-7 w-7 rounded-full object-cover ring-2 ring-background" />
-            <img src={personById(thread.members![1]).avatar} alt="" className="absolute bottom-0 right-0 h-7 w-7 rounded-full object-cover ring-2 ring-background" />
-          </div>
-        ) : (
+        {headerAvatar ? (
           <img src={headerAvatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-muted" />
         )}
         <div className="min-w-0 flex-1 leading-tight">
           <div className="flex items-center gap-1.5">
@@ -84,76 +76,55 @@ function ThreadPage() {
             </div>
             {isGroup && <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />}
           </div>
-          <div className="text-[11px] text-muted-foreground">
-            {isGroup
-              ? `${thread.members!.length} members${thread.hasWali ? " · Wali present" : ""}`
-              : thread.online ? "Active now" : `Active ${thread.timeAgo} ago`}
-          </div>
+          {isGroup && (
+            <div className="text-[11px] text-muted-foreground">
+              {thread.members.length} members{thread.has_wali ? " · Wali present" : ""}
+            </div>
+          )}
         </div>
-        <button className="rounded-full p-2 text-muted-foreground hover:bg-muted"><Phone className="h-5 w-5" /></button>
-        <button className="rounded-full p-2 text-muted-foreground hover:bg-muted"><Video className="h-5 w-5" /></button>
       </header>
 
-      {/* Wali banner / promote-to-group CTA for Nikah */}
-      {isMatri && (
+      {isMatri && !isGroup && (
         <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-2xl border border-accent/40 bg-[var(--gradient-card)] p-3.5 text-xs text-foreground shadow-[var(--shadow-soft)]">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--mode-brotherhood)]" />
           <div className="flex-1">
             <p className="font-medium">
-              {isGroup
-                ? "Wali-friendly group. All participants can see every message."
-                : "Wali-friendly chat. Promote this conversation to a group with your wali in one tap."}
+              Wali-friendly chat. Adding a wali to this conversation is coming soon.
             </p>
-            {!isGroup && (
-              <button
-                onClick={addWali}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1 text-[11px] font-medium text-background hover:opacity-90"
-              >
-                <UserPlus className="h-3 w-3" /> Add Wali to conversation
-              </button>
-            )}
           </div>
         </div>
       )}
 
-      {/* Messages */}
       <div className="flex-1 space-y-2.5 overflow-y-auto px-4 py-5">
-        {msgs.map((m) => {
-          if (m.system) {
+        {messages?.map((m) => {
+          const fromMe = m.sender_id === user?.id;
+          if (m.is_system) {
             return (
               <div key={m.id} className="my-3 text-center">
                 <span className="rounded-full bg-card px-3 py-1 text-[11px] text-muted-foreground shadow-[var(--shadow-soft)]">
-                  {m.text}
+                  {m.body}
                 </span>
               </div>
             );
           }
-          const sender = !m.fromMe && isGroup && m.fromId ? personById(m.fromId) : null;
           return (
-            <div key={m.id} className={`flex ${m.fromMe ? "justify-end" : "justify-start"}`}>
-              {!m.fromMe && (
-                <img
-                  src={sender ? sender.avatar : (isGroup ? personById(thread.members![0]).avatar : personById(thread.personId!).avatar)}
-                  alt=""
-                  className="mr-2 mt-auto h-6 w-6 shrink-0 rounded-full object-cover"
-                />
-              )}
+            <div key={m.id} className={`flex ${fromMe ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[78%] rounded-3xl px-4 py-2.5 text-sm leading-snug shadow-[var(--shadow-soft)] ${
-                  m.fromMe
+                  fromMe
                     ? "rounded-br-md text-primary-foreground"
                     : "rounded-bl-md bg-card text-foreground"
                 }`}
-                style={m.fromMe ? { background: `var(--mode-${thread.mode})` } : undefined}
+                style={fromMe ? { background: `var(--mode-${thread.mode})` } : undefined}
               >
-                {sender && (
-                  <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider opacity-70">
-                    {sender.name}
-                  </div>
-                )}
-                {m.text}
-                <div className={`mt-0.5 text-[10px] ${m.fromMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                  {m.time}
+                {m.body}
+                <div
+                  className={`mt-0.5 text-[10px] ${fromMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+                >
+                  {new Date(m.created_at).toLocaleTimeString([], {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
                 </div>
               </div>
             </div>
@@ -161,7 +132,6 @@ function ThreadPage() {
         })}
       </div>
 
-      {/* Composer */}
       <div className="sticky bottom-0 border-t border-border/50 bg-background/95 px-3 py-2.5 backdrop-blur">
         <div className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1.5 shadow-[var(--shadow-soft)]">
           <button className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted">

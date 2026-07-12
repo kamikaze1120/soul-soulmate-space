@@ -1,24 +1,30 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, PenSquare, Users as UsersIcon, ShieldCheck } from "lucide-react";
+import { Search, Users as UsersIcon, ShieldCheck } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
-import { THREADS, personById, threadAvatars, threadTitle, type Thread } from "@/lib/mock-data";
+import { useThreads, type ThreadSummary } from "@/lib/queries/threads";
+import { EmptyState } from "@/components/empty-state";
 
 export const Route = createFileRoute("/_authenticated/_app/messages/")({
   head: () => ({ meta: [{ title: "Chats · Ummah" }] }),
   component: MessagesPage,
 });
 
+function threadTitle(t: ThreadSummary): string {
+  if (t.kind === "group") return t.title ?? "Group";
+  return t.otherMembers[0]?.display_name ?? "Conversation";
+}
+
 function MessagesPage() {
   const { active } = useActiveMode();
   const [q, setQ] = useState("");
-  const threads = useMemo(() => {
-    const filtered = THREADS.filter((t) => t.mode === active);
-    if (!q) return filtered;
-    return filtered.filter((t) =>
-      threadTitle(t).toLowerCase().includes(q.toLowerCase()),
-    );
-  }, [active, q]);
+  const { data: threads, isLoading } = useThreads(active);
+
+  const filtered = useMemo(() => {
+    if (!threads) return [];
+    if (!q) return threads;
+    return threads.filter((t) => threadTitle(t).toLowerCase().includes(q.toLowerCase()));
+  }, [threads, q]);
 
   return (
     <div>
@@ -26,11 +32,10 @@ function MessagesPage() {
         <div className="flex items-end justify-between">
           <div>
             <p className="eyebrow text-muted-foreground">Conversations</p>
-            <h2 className="font-display mt-1 text-3xl font-medium tracking-tight text-foreground">Chats</h2>
+            <h2 className="font-display mt-1 text-3xl font-medium tracking-tight text-foreground">
+              Chats
+            </h2>
           </div>
-          <button className="rounded-full border border-border bg-card p-2.5 text-foreground shadow-[var(--shadow-soft)] hover:bg-muted">
-            <PenSquare className="h-4 w-4" />
-          </button>
         </div>
         <div className="mt-4 flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2.5">
           <Search className="h-4 w-4 text-muted-foreground" />
@@ -44,26 +49,26 @@ function MessagesPage() {
       </div>
 
       <ul className="mt-4 divide-y divide-border/40">
-        {threads.length === 0 && (
-          <li className="px-6 py-16 text-center text-sm text-muted-foreground">
-            No conversations yet.
+        {!isLoading && filtered.length === 0 && (
+          <li>
+            <EmptyState
+              title="No conversations yet"
+              description="Like someone in Discover to start a conversation."
+            />
           </li>
         )}
-        {threads.map((t) => <ThreadRow key={t.id} t={t} />)}
+        {filtered.map((t) => (
+          <ThreadRow key={t.id} t={t} />
+        ))}
       </ul>
     </div>
   );
 }
 
-function ThreadRow({ t }: { t: Thread }) {
-  const avatars = threadAvatars(t);
+function ThreadRow({ t }: { t: ThreadSummary }) {
   const title = threadTitle(t);
   const subline =
-    t.kind === "group" && t.members
-      ? `${t.members.length} members${t.hasWali ? " · Wali present" : ""}`
-      : t.online
-        ? "Active now"
-        : `Active ${t.timeAgo} ago`;
+    t.kind === "group" ? `${t.members.length} members${t.has_wali ? " · Wali present" : ""}` : "";
 
   return (
     <li>
@@ -74,17 +79,21 @@ function ThreadRow({ t }: { t: Thread }) {
       >
         {t.kind === "group" ? (
           <div className="relative h-14 w-14 shrink-0">
-            <img
-              src={avatars[0]}
-              alt=""
-              className="absolute left-0 top-0 h-10 w-10 rounded-full object-cover ring-2 ring-background"
-            />
-            <img
-              src={avatars[1]}
-              alt=""
-              className="absolute bottom-0 right-0 h-10 w-10 rounded-full object-cover ring-2 ring-background"
-            />
-            {t.hasWali && (
+            {t.otherMembers[0]?.avatarUrl && (
+              <img
+                src={t.otherMembers[0].avatarUrl}
+                alt=""
+                className="absolute left-0 top-0 h-10 w-10 rounded-full object-cover ring-2 ring-background"
+              />
+            )}
+            {t.otherMembers[1]?.avatarUrl && (
+              <img
+                src={t.otherMembers[1].avatarUrl}
+                alt=""
+                className="absolute bottom-0 right-0 h-10 w-10 rounded-full object-cover ring-2 ring-background"
+              />
+            )}
+            {t.has_wali && (
               <span className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--mode-brotherhood)] ring-2 ring-background">
                 <ShieldCheck className="h-3 w-3 text-primary-foreground" />
               </span>
@@ -92,9 +101,14 @@ function ThreadRow({ t }: { t: Thread }) {
           </div>
         ) : (
           <div className="relative shrink-0">
-            <img src={personById(t.personId!).avatar} alt="" className="h-14 w-14 rounded-full object-cover" />
-            {t.online && (
-              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-background bg-emerald-500" />
+            {t.otherMembers[0]?.avatarUrl ? (
+              <img
+                src={t.otherMembers[0].avatarUrl}
+                alt=""
+                className="h-14 w-14 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-14 w-14 rounded-full bg-muted" />
             )}
           </div>
         )}
@@ -105,21 +119,10 @@ function ThreadRow({ t }: { t: Thread }) {
               {title}
               {t.kind === "group" && <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />}
             </span>
-            <span className="text-[11px] text-muted-foreground">{t.timeAgo}</span>
           </div>
-          <div className="text-[11px] text-muted-foreground">{subline}</div>
-          <div className="mt-0.5 flex items-center justify-between gap-2">
-            <span className={`truncate text-sm ${t.unread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-              {t.lastMessage}
-            </span>
-            {t.unread > 0 && (
-              <span
-                className="grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-semibold text-primary-foreground"
-                style={{ background: `var(--mode-${t.mode})` }}
-              >
-                {t.unread}
-              </span>
-            )}
+          {subline && <div className="text-[11px] text-muted-foreground">{subline}</div>}
+          <div className="mt-0.5 truncate text-sm text-muted-foreground">
+            {t.lastMessage?.body ?? "Say salaam 👋"}
           </div>
         </div>
       </Link>

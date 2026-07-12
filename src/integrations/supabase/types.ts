@@ -14,6 +14,55 @@ export type Database = {
   }
   public: {
     Tables: {
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_system: boolean
+          sender_id: string | null
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          sender_id?: string | null
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          sender_id?: string | null
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mode_entitlements: {
         Row: {
           created_at: string
@@ -50,12 +99,99 @@ export type Database = {
         }
         Relationships: []
       }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          caption: string
+          created_at: string
+          id: string
+          image_path: string
+          mode: Database["public"]["Enums"]["app_mode"]
+        }
+        Insert: {
+          author_id: string
+          caption?: string
+          created_at?: string
+          id?: string
+          image_path: string
+          mode: Database["public"]["Enums"]["app_mode"]
+        }
+        Update: {
+          author_id?: string
+          caption?: string
+          created_at?: string
+          id?: string
+          image_path?: string
+          mode?: Database["public"]["Enums"]["app_mode"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          avatar_path: string | null
           bio: string | null
           blur_photos: boolean
           city: string | null
           country: string | null
+          cover_path: string | null
           created_at: string
           display_name: string | null
           has_kids: boolean
@@ -72,10 +208,12 @@ export type Database = {
           wali_contact: string | null
         }
         Insert: {
+          avatar_path?: string | null
           bio?: string | null
           blur_photos?: boolean
           city?: string | null
           country?: string | null
+          cover_path?: string | null
           created_at?: string
           display_name?: string | null
           has_kids?: boolean
@@ -92,10 +230,12 @@ export type Database = {
           wali_contact?: string | null
         }
         Update: {
+          avatar_path?: string | null
           bio?: string | null
           blur_photos?: boolean
           city?: string | null
           country?: string | null
+          cover_path?: string | null
           created_at?: string
           display_name?: string | null
           has_kids?: boolean
@@ -110,6 +250,82 @@ export type Database = {
           updated_at?: string
           verified_gender?: Database["public"]["Enums"]["gender"] | null
           wali_contact?: string | null
+        }
+        Relationships: []
+      }
+      thread_members: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_members_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      threads: {
+        Row: {
+          created_at: string
+          has_wali: boolean
+          id: string
+          kind: string
+          mode: Database["public"]["Enums"]["app_mode"]
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          has_wali?: boolean
+          id?: string
+          kind?: string
+          mode: Database["public"]["Enums"]["app_mode"]
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          has_wali?: boolean
+          id?: string
+          kind?: string
+          mode?: Database["public"]["Enums"]["app_mode"]
+          title?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -136,15 +352,103 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      discoverable_profiles: {
+        Row: {
+          avatar_path: string | null
+          bio: string | null
+          blur_photos: boolean | null
+          city: string | null
+          country: string | null
+          cover_path: string | null
+          created_at: string | null
+          display_name: string | null
+          has_kids: boolean | null
+          id: string | null
+          is_verified: boolean | null
+          kids_age_groups: string[] | null
+          marital_status: Database["public"]["Enums"]["marital_status"] | null
+          primary_mode: Database["public"]["Enums"]["app_mode"] | null
+          verified_gender: Database["public"]["Enums"]["gender"] | null
+        }
+        Insert: {
+          avatar_path?: string | null
+          bio?: string | null
+          blur_photos?: boolean | null
+          city?: string | null
+          country?: string | null
+          cover_path?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          has_kids?: boolean | null
+          id?: string | null
+          is_verified?: boolean | null
+          kids_age_groups?: string[] | null
+          marital_status?: Database["public"]["Enums"]["marital_status"] | null
+          primary_mode?: Database["public"]["Enums"]["app_mode"] | null
+          verified_gender?: Database["public"]["Enums"]["gender"] | null
+        }
+        Update: {
+          avatar_path?: string | null
+          bio?: string | null
+          blur_photos?: boolean | null
+          city?: string | null
+          country?: string | null
+          cover_path?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          has_kids?: boolean | null
+          id?: string | null
+          is_verified?: boolean | null
+          kids_age_groups?: string[] | null
+          marital_status?: Database["public"]["Enums"]["marital_status"] | null
+          primary_mode?: Database["public"]["Enums"]["app_mode"] | null
+          verified_gender?: Database["public"]["Enums"]["gender"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      can_view_mode: {
+        Args: {
+          _mode: Database["public"]["Enums"]["app_mode"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      is_thread_member: {
+        Args: { _thread_id: string; _user_id: string }
+        Returns: boolean
+      }
+      send_message: {
+        Args: { _body: string; _thread_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          is_system: boolean
+          sender_id: string | null
+          thread_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      start_dm_thread: {
+        Args: {
+          _mode: Database["public"]["Enums"]["app_mode"]
+          _other_user_id: string
+        }
+        Returns: string
       }
     }
     Enums: {
