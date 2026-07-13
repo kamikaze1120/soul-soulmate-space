@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { Heart, Users, ShieldCheck, Lock, Sparkles, Check } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Heart, Users, ShieldCheck, Lock, Sparkles, Check, CreditCard } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { MODES, PRICING, visibleModes, type AppMode } from "@/lib/modes";
 import { useActiveMode } from "@/lib/active-mode";
+import { createCheckoutSession, createBillingPortalSession } from "@/lib/billing.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/modes")({
@@ -18,8 +19,11 @@ const ICONS: Record<AppMode, React.ReactNode> = {
 };
 
 function ModesPage() {
-  const { profile, entitlements } = useAuth();
+  const { profile, entitlements, refresh } = useAuth();
   const { active, setActive } = useActiveMode();
+  const navigate = useNavigate();
+  const [checkoutLoading, setCheckoutLoading] = useState<AppMode | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
   const visible = useMemo(
     () => visibleModes(profile?.verified_gender ?? null, profile?.is_verified ?? false),
     [profile],
@@ -27,9 +31,61 @@ function ModesPage() {
   const entMap = new Map(entitlements.map((e) => [e.mode, e]));
   const activeCount = entitlements.filter((e) => e.is_active).length;
 
+  // Stripe redirects back here with ?checkout=success|cancelled after
+  // Checkout. The webhook writes mode_entitlements asynchronously, so this
+  // is a best-effort immediate refresh — it may need a moment/second visit
+  // to reflect if the webhook hasn't landed yet.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get("checkout");
+    if (!checkout) return;
+    if (checkout === "success") {
+      toast.success("Subscription started — this may take a few seconds to unlock.");
+      refresh();
+    } else if (checkout === "cancelled") {
+      toast.info("Checkout cancelled.");
+    }
+    navigate({ to: "/modes", search: {}, replace: true });
+  }, [navigate, refresh]);
+
+  const startCheckout = async (mode: AppMode) => {
+    setCheckoutLoading(mode);
+    try {
+      const { url } = await createCheckoutSession({
+        data: { mode, hasExistingActiveMode: activeCount > 0 },
+      });
+      window.location.href = url;
+    } catch {
+      toast.error("Couldn't start checkout — try again.");
+      setCheckoutLoading(null);
+    }
+  };
+
+  const openBillingPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { url } = await createBillingPortalSession();
+      window.location.href = url;
+    } catch {
+      toast.error("Couldn't open billing portal.");
+      setPortalLoading(false);
+    }
+  };
+
   return (
     <div className="px-4 pt-5">
-      <h2 className="text-2xl font-semibold tracking-tight text-foreground">Mode Switcher</h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground">Mode Switcher</h2>
+        {activeCount > 0 && (
+          <button
+            onClick={openBillingPortal}
+            disabled={portalLoading}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-soft)] disabled:opacity-50"
+          >
+            <CreditCard className="h-3.5 w-3.5" /> Billing
+          </button>
+        )}
+      </div>
       <p className="mt-1 text-sm text-muted-foreground">
         {activeCount === 0
           ? `Start your $${PRICING.trialPrice} 7-day trial on any unlocked mode below.`
@@ -116,17 +172,16 @@ function ModesPage() {
                       ) : (
                         <>
                           <button
-                            onClick={() =>
-                              toast.info(
-                                "Stripe checkout coming soon — payments will be wired up next.",
-                              )
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--mode-matrimonial)] px-4 py-1.5 text-xs font-semibold text-primary-foreground"
+                            onClick={() => startCheckout(m)}
+                            disabled={checkoutLoading !== null}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--mode-matrimonial)] px-4 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                           >
                             <Sparkles className="h-3.5 w-3.5" />
-                            {activeCount === 0
-                              ? `Start trial · $${PRICING.trialPrice}`
-                              : `Add for $${PRICING.addOnPrice}/mo`}
+                            {checkoutLoading === m
+                              ? "Redirecting…"
+                              : activeCount === 0
+                                ? `Start trial · $${PRICING.trialPrice}`
+                                : `Add for $${PRICING.addOnPrice}/mo`}
                           </button>
                           <span className="text-[11px] text-muted-foreground">
                             then ${PRICING.basePrice}/mo

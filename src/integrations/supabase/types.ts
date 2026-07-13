@@ -203,6 +203,7 @@ export type Database = {
           longitude: number | null
           marital_status: Database["public"]["Enums"]["marital_status"] | null
           primary_mode: Database["public"]["Enums"]["app_mode"] | null
+          stripe_customer_id: string | null
           updated_at: string
           verified_gender: Database["public"]["Enums"]["gender"] | null
           wali_contact: string | null
@@ -225,6 +226,7 @@ export type Database = {
           longitude?: number | null
           marital_status?: Database["public"]["Enums"]["marital_status"] | null
           primary_mode?: Database["public"]["Enums"]["app_mode"] | null
+          stripe_customer_id?: string | null
           updated_at?: string
           verified_gender?: Database["public"]["Enums"]["gender"] | null
           wali_contact?: string | null
@@ -247,6 +249,7 @@ export type Database = {
           longitude?: number | null
           marital_status?: Database["public"]["Enums"]["marital_status"] | null
           primary_mode?: Database["public"]["Enums"]["app_mode"] | null
+          stripe_customer_id?: string | null
           updated_at?: string
           verified_gender?: Database["public"]["Enums"]["gender"] | null
           wali_contact?: string | null
