@@ -18,6 +18,7 @@ import { Route as AuthenticatedVerifyRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
+import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin/reports'
 import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/_app/profile'
 import { Route as AuthenticatedAppModesRouteImport } from './routes/_authenticated/_app/modes'
 import { Route as AuthenticatedAppFeedRouteImport } from './routes/_authenticated/_app/feed'
@@ -69,6 +70,12 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/_app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminReportsRoute =
+  AuthenticatedAdminReportsRouteImport.update({
+    id: '/admin/reports',
+    path: '/admin/reports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof AuthenticatedAppFeedRoute
   '/modes': typeof AuthenticatedAppModesRoute
   '/profile': typeof AuthenticatedAppProfileRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/messages/': typeof AuthenticatedAppMessagesIndexRoute
 }
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
   '/feed': typeof AuthenticatedAppFeedRoute
   '/modes': typeof AuthenticatedAppModesRoute
   '/profile': typeof AuthenticatedAppProfileRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/messages': typeof AuthenticatedAppMessagesIndexRoute
 }
@@ -148,6 +157,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/feed': typeof AuthenticatedAppFeedRoute
   '/_authenticated/_app/modes': typeof AuthenticatedAppModesRoute
   '/_authenticated/_app/profile': typeof AuthenticatedAppProfileRoute
+  '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/_app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/_authenticated/_app/messages/': typeof AuthenticatedAppMessagesIndexRoute
 }
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/modes'
     | '/profile'
+    | '/admin/reports'
     | '/messages/$id'
     | '/messages/'
   fileRoutesByTo: FileRoutesByTo
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/modes'
     | '/profile'
+    | '/admin/reports'
     | '/messages/$id'
     | '/messages'
   id:
@@ -197,6 +209,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/feed'
     | '/_authenticated/_app/modes'
     | '/_authenticated/_app/profile'
+    | '/_authenticated/admin/reports'
     | '/_authenticated/_app/messages/$id'
     | '/_authenticated/_app/messages/'
   fileRoutesById: FileRoutesById
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/reports': {
+      id: '/_authenticated/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AuthenticatedAdminReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/_app/profile': {
       id: '/_authenticated/_app/profile'
       path: '/profile'
@@ -345,6 +365,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedVerifyRoute: typeof AuthenticatedVerifyRoute
+  AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -352,6 +373,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedVerifyRoute: AuthenticatedVerifyRoute,
+  AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

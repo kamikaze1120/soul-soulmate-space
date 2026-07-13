@@ -1,10 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Heart, MessageCircle, Send, Bookmark, BadgeCheck, MoreHorizontal } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Send,
+  Bookmark,
+  BadgeCheck,
+  MoreHorizontal,
+  Flag,
+} from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
 import { useFeedPosts, useToggleLike } from "@/lib/queries/feed";
+import { useCreateReport } from "@/lib/queries/reports";
 import { ModeBadge } from "@/components/app-shell";
 import { EmptyState } from "@/components/empty-state";
 import { MODES } from "@/lib/modes";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/feed")({
   head: () => ({ meta: [{ title: "Feed · Ummah" }] }),
@@ -16,6 +32,21 @@ function FeedPage() {
   const meta = MODES[active];
   const { data: posts, isLoading } = useFeedPosts(active);
   const toggleLike = useToggleLike(active);
+  const createReport = useCreateReport();
+
+  const reportPost = async (postId: string) => {
+    try {
+      await createReport.mutateAsync({
+        target_type: "post",
+        target_id: postId,
+        reason: "Reported from feed",
+        details: "",
+      });
+      toast.success("Report submitted — thank you.");
+    } catch {
+      toast.error("Couldn't submit report.");
+    }
+  };
 
   return (
     <div>
@@ -57,9 +88,21 @@ function FeedPage() {
                   <div className="text-[11px] text-muted-foreground">{post.author?.city}</div>
                 </div>
               </div>
-              <button className="rounded-full p-1.5 text-muted-foreground hover:bg-muted">
-                <MoreHorizontal className="h-5 w-5" />
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="rounded-full p-1.5 text-muted-foreground hover:bg-muted">
+                    <MoreHorizontal className="h-5 w-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={() => reportPost(post.id)}
+                    className="text-destructive"
+                  >
+                    <Flag className="mr-2 h-4 w-4" /> Report post
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </header>
             {post.imageUrl && (
               <div className="aspect-square w-full overflow-hidden bg-muted">

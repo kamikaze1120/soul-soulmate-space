@@ -1,9 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Send, Plus, Smile, ShieldCheck, Users as UsersIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Send,
+  Plus,
+  Smile,
+  ShieldCheck,
+  UserPlus,
+  Users as UsersIcon,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useThreads } from "@/lib/queries/threads";
 import { useMessages, useSendMessage } from "@/lib/queries/messages";
+import { useAddWali } from "@/lib/queries/wali";
 import { useMessagesSubscription } from "@/lib/realtime/use-messages-subscription";
 import { toast } from "sonner";
 
@@ -29,7 +38,23 @@ function ThreadPage() {
 
   const { data: messages } = useMessages(id);
   const sendMessage = useSendMessage(id);
+  const addWali = useAddWali(id);
   useMessagesSubscription(id);
+  const [waliEmail, setWaliEmail] = useState("");
+  const [showWaliInput, setShowWaliInput] = useState(false);
+
+  const submitWali = async () => {
+    const trimmed = waliEmail.trim();
+    if (!trimmed) return;
+    try {
+      await addWali.mutateAsync(trimmed);
+      toast.success("Wali added to conversation");
+      setShowWaliInput(false);
+      setWaliEmail("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't add wali.");
+    }
+  };
 
   const send = async () => {
     const trimmed = text.trim();
@@ -89,8 +114,35 @@ function ThreadPage() {
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--mode-brotherhood)]" />
           <div className="flex-1">
             <p className="font-medium">
-              Wali-friendly chat. Adding a wali to this conversation is coming soon.
+              Wali-friendly chat. Add your wali to this conversation — they need an existing Ummah
+              account.
             </p>
+            {showWaliInput ? (
+              <div className="mt-2 flex items-center gap-1.5">
+                <input
+                  value={waliEmail}
+                  onChange={(e) => setWaliEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && submitWali()}
+                  placeholder="Wali's email"
+                  type="email"
+                  className="min-w-0 flex-1 rounded-full border border-border bg-background px-3 py-1 text-[11px] outline-none placeholder:text-muted-foreground"
+                />
+                <button
+                  onClick={submitWali}
+                  disabled={addWali.isPending}
+                  className="shrink-0 rounded-full bg-foreground px-3 py-1 text-[11px] font-medium text-background disabled:opacity-50"
+                >
+                  {addWali.isPending ? "Adding…" : "Add"}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowWaliInput(true)}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1 text-[11px] font-medium text-background hover:opacity-90"
+              >
+                <UserPlus className="h-3 w-3" /> Add Wali to conversation
+              </button>
+            )}
           </div>
         </div>
       )}
