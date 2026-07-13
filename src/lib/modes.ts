@@ -48,7 +48,14 @@ export const PRICING = {
 // Nikah (matrimonial) is the highest-stakes mode — opposite-gender matching,
 // wali involvement — so it stays locked until Stripe Identity verification.
 // Sisterhood/Brotherhood are peer-community spaces, gender-gated only.
-export function visibleModes(gender: Gender | null, isVerified: boolean): AppMode[] {
+// Admins bypass all of this (mirrors the can_view_mode() DB function) so a
+// single seed/admin account can post across every mode.
+export function visibleModes(
+  gender: Gender | null,
+  isVerified: boolean,
+  isAdmin = false,
+): AppMode[] {
+  if (isAdmin) return ["matrimonial", "sisterhood", "brotherhood"];
   const modes: AppMode[] = [];
   if (isVerified) modes.push("matrimonial");
   if (gender === "female") modes.push("sisterhood");

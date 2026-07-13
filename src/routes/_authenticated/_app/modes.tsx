@@ -19,14 +19,14 @@ const ICONS: Record<AppMode, React.ReactNode> = {
 };
 
 function ModesPage() {
-  const { profile, entitlements, refresh } = useAuth();
+  const { profile, entitlements, isAdmin, refresh } = useAuth();
   const { active, setActive } = useActiveMode();
   const navigate = useNavigate();
   const [checkoutLoading, setCheckoutLoading] = useState<AppMode | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const visible = useMemo(
-    () => visibleModes(profile?.verified_gender ?? null, profile?.is_verified ?? false),
-    [profile],
+    () => visibleModes(profile?.verified_gender ?? null, profile?.is_verified ?? false, isAdmin),
+    [profile, isAdmin],
   );
   const entMap = new Map(entitlements.map((e) => [e.mode, e]));
   const activeCount = entitlements.filter((e) => e.is_active).length;

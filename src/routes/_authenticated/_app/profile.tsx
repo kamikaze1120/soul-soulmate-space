@@ -11,6 +11,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useActiveMode } from "@/lib/active-mode";
 import { useFeedPosts } from "@/lib/queries/feed";
+import { useThreads } from "@/lib/queries/threads";
 import { MODES } from "@/lib/modes";
 
 export const Route = createFileRoute("/_authenticated/_app/profile")({
@@ -23,6 +24,7 @@ function ProfilePage() {
   const { active } = useActiveMode();
   const activeCount = entitlements.filter((e) => e.is_active).length;
   const { data: posts } = useFeedPosts(active);
+  const { data: threads } = useThreads(active);
   const grid = (posts ?? []).filter((p) => p.author_id === user?.id);
 
   return (
@@ -55,7 +57,7 @@ function ProfilePage() {
           </div>
           <div className="mt-4 flex gap-6 text-sm">
             <Stat label="Posts" value={grid.length} />
-            <Stat label="Connections" value={48} />
+            <Stat label="Chats" value={threads?.length ?? 0} />
             <Stat label="Modes" value={activeCount} />
           </div>
         </div>

@@ -22,6 +22,7 @@ type AuthContextValue = {
   session: Session | null;
   profile: Profile | null;
   entitlements: Entitlement[];
+  isAdmin: boolean;
   loading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -34,10 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [entitlements, setEntitlements] = useState<Entitlement[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadUserData = async (uid: string) => {
-    const [{ data: prof }, { data: ents }] = await Promise.all([
+    const [{ data: prof }, { data: ents }, { data: role }] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, display_name, verified_gender, is_verified, primary_mode")
@@ -47,14 +49,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("mode_entitlements")
         .select("mode, is_active, is_trial, current_period_end")
         .eq("user_id", uid),
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid)
+        .eq("role", "admin")
+        .maybeSingle(),
     ]);
     setProfile((prof as Profile) ?? null);
     setEntitlements((ents as Entitlement[]) ?? []);
+    setIsAdmin(!!role);
   };
 
   useEffect(() => {
     // Set up listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
@@ -63,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setEntitlements([]);
+        setIsAdmin(false);
       }
     });
 
@@ -85,7 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, entitlements, loading, refresh, signOut }}>
+    <AuthContext.Provider
+      value={{ user, session, profile, entitlements, isAdmin, loading, refresh, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -148,7 +148,7 @@ export function AppShell() {
                 className={cn(
                   "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all",
                   isActive
-                    ? "bg-[var(--gradient-ink)] text-background shadow-[var(--shadow-ink)]"
+                    ? "bg-[var(--gradient-ink)] text-accent shadow-[var(--shadow-ink)]"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
