@@ -6,6 +6,8 @@
   "main": "src/server.ts",
   // Secrets required at runtime (set via `wrangler secret put <NAME>`, never
   // as plain "vars" here): SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY,
-  // STRIPE_WEBHOOK_SECRET. APP_ORIGIN (e.g. https://ummah.app) can be a plain
-  // var since it's not sensitive — add it once the production URL exists.
+  // STRIPE_WEBHOOK_SECRET, STRIPE_IDENTITY_WEBHOOK_SECRET (a separate Stripe
+  // Dashboard webhook endpoint/secret from STRIPE_WEBHOOK_SECRET). APP_ORIGIN
+  // (e.g. https://ummah.app) can be a plain var since it's not sensitive —
+  // add it once the production URL exists.
 }

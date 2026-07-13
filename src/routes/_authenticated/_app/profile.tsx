@@ -12,7 +12,6 @@ import { useAuth } from "@/lib/auth";
 import { useActiveMode } from "@/lib/active-mode";
 import { useFeedPosts } from "@/lib/queries/feed";
 import { MODES } from "@/lib/modes";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/profile")({
   head: () => ({ meta: [{ title: "Profile · Ummah" }] }),
@@ -90,12 +89,12 @@ function ProfilePage() {
             </p>
             <p className="text-xs text-muted-foreground">Government ID check — unlocks Nikah.</p>
           </div>
-          <button
-            onClick={() => toast.info("Identity verification is coming soon.")}
+          <Link
+            to="/verify"
             className="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
           >
             Start
-          </button>
+          </Link>
         </div>
       )}
 

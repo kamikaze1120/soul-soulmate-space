@@ -13,6 +13,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe-webhook'
+import { Route as ApiStripeIdentityWebhookRouteImport } from './routes/api/stripe-identity-webhook'
+import { Route as AuthenticatedVerifyRouteImport } from './routes/_authenticated/verify'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
@@ -41,6 +43,17 @@ const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe-webhook',
   path: '/api/stripe-webhook',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeIdentityWebhookRoute =
+  ApiStripeIdentityWebhookRouteImport.update({
+    id: '/api/stripe-identity-webhook',
+    path: '/api/stripe-identity-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedVerifyRoute = AuthenticatedVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
@@ -95,6 +108,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/verify': typeof AuthenticatedVerifyRoute
+  '/api/stripe-identity-webhook': typeof ApiStripeIdentityWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/discover': typeof AuthenticatedAppDiscoverRoute
   '/feed': typeof AuthenticatedAppFeedRoute
@@ -108,6 +123,8 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/verify': typeof AuthenticatedVerifyRoute
+  '/api/stripe-identity-webhook': typeof ApiStripeIdentityWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/discover': typeof AuthenticatedAppDiscoverRoute
   '/feed': typeof AuthenticatedAppFeedRoute
@@ -124,6 +141,8 @@ export interface FileRoutesById {
   '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/verify': typeof AuthenticatedVerifyRoute
+  '/api/stripe-identity-webhook': typeof ApiStripeIdentityWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/_app/discover': typeof AuthenticatedAppDiscoverRoute
   '/_authenticated/_app/feed': typeof AuthenticatedAppFeedRoute
@@ -139,6 +158,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/onboarding'
+    | '/verify'
+    | '/api/stripe-identity-webhook'
     | '/api/stripe-webhook'
     | '/discover'
     | '/feed'
@@ -152,6 +173,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/onboarding'
+    | '/verify'
+    | '/api/stripe-identity-webhook'
     | '/api/stripe-webhook'
     | '/discover'
     | '/feed'
@@ -167,6 +190,8 @@ export interface FileRouteTypes {
     | '/_authenticated/_app'
     | '/_authenticated/dashboard'
     | '/_authenticated/onboarding'
+    | '/_authenticated/verify'
+    | '/api/stripe-identity-webhook'
     | '/api/stripe-webhook'
     | '/_authenticated/_app/discover'
     | '/_authenticated/_app/feed'
@@ -180,6 +205,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiStripeIdentityWebhookRoute: typeof ApiStripeIdentityWebhookRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
@@ -212,6 +238,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/stripe-webhook'
       preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe-identity-webhook': {
+      id: '/api/stripe-identity-webhook'
+      path: '/api/stripe-identity-webhook'
+      fullPath: '/api/stripe-identity-webhook'
+      preLoaderRoute: typeof ApiStripeIdentityWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/verify': {
+      id: '/_authenticated/verify'
+      path: '/verify'
+      fullPath: '/verify'
+      preLoaderRoute: typeof AuthenticatedVerifyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
@@ -304,12 +344,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedVerifyRoute: typeof AuthenticatedVerifyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedVerifyRoute: AuthenticatedVerifyRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -319,6 +361,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiStripeIdentityWebhookRoute: ApiStripeIdentityWebhookRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
