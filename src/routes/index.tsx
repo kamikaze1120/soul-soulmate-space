@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Heart, Users, BadgeCheck, ArrowRight } from "lucide-react";
 import { PRICING } from "@/lib/modes";
+import { LogoMark } from "@/components/logo-mark";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -13,7 +14,10 @@ export const Route = createFileRoute("/")({
           "A high-trust Muslim community app with ID-verified members. Nikah, Sisterhood (moms), and Brotherhood (dads) — strict gender lock, Wali-friendly, modesty-first.",
       },
       { property: "og:title", content: "Ummah — Verified Muslim Community" },
-      { property: "og:description", content: "ID-verified Nikah, Sisterhood & Brotherhood. Wali-friendly." },
+      {
+        property: "og:description",
+        content: "ID-verified Nikah, Sisterhood & Brotherhood. Wali-friendly.",
+      },
     ],
   }),
   component: Landing,
@@ -26,13 +30,15 @@ function Landing() {
       <header className="border-b border-border/50">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link to="/" className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--gradient-hero)] text-base font-semibold text-primary-foreground shadow-[var(--shadow-soft)]">
-              ﷲ
+            <LogoMark className="h-9 w-9 text-base" />
+            <span className="font-display text-2xl font-semibold tracking-tight text-foreground">
+              Ummah
             </span>
-            <span className="font-display text-2xl font-semibold tracking-tight text-foreground">Ummah</span>
           </Link>
           <Link to="/auth">
-            <Button variant="ghost" className="font-medium">Sign in</Button>
+            <Button variant="ghost" className="font-medium">
+              Sign in
+            </Button>
           </Link>
         </div>
       </header>
@@ -60,13 +66,20 @@ function Landing() {
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link to="/auth">
-              <Button size="lg" className="h-12 gap-2 rounded-full px-6 text-sm font-medium shadow-[var(--shadow-elevated)]">
+              <Button
+                size="lg"
+                className="h-12 gap-2 rounded-full px-6 text-sm font-medium shadow-[var(--shadow-elevated)]"
+              >
                 Begin your ${PRICING.trialPrice} · 7-day trial
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link to="/auth">
-              <Button size="lg" variant="outline" className="h-12 rounded-full border-border bg-card/60 px-6 text-sm font-medium backdrop-blur">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 rounded-full border-border bg-card/60 px-6 text-sm font-medium backdrop-blur"
+              >
                 Already a member
               </Button>
             </Link>
@@ -120,9 +133,18 @@ function Landing() {
       <section className="bg-[var(--gradient-card)] border-y border-border/50 py-20">
         <div className="mx-auto max-w-5xl px-6">
           <div className="grid gap-12 md:grid-cols-3">
-            <Pillar n="ID + Liveness" body="Every member passes a government-ID check and a 3-second liveness video. No catfishing." />
-            <Pillar n="Strict gender-lock" body="Sisterhood and Brotherhood are invisible to the opposite gender. By design." />
-            <Pillar n="Wali-friendly chats" body="A sister can promote any Nikah DM to a group with her wali in one tap." />
+            <Pillar
+              n="ID + Liveness"
+              body="Every member passes a government-ID check and a 3-second liveness video. No catfishing."
+            />
+            <Pillar
+              n="Strict gender-lock"
+              body="Sisterhood and Brotherhood are invisible to the opposite gender. By design."
+            />
+            <Pillar
+              n="Wali-friendly chats"
+              body="A sister can promote any Nikah DM to a group with her wali in one tap."
+            />
           </div>
         </div>
       </section>
@@ -160,7 +182,9 @@ function ModeCard({
       >
         {icon}
       </div>
-      <h3 className="font-display mt-6 text-3xl font-medium tracking-tight text-foreground">{title}</h3>
+      <h3 className="font-display mt-6 text-3xl font-medium tracking-tight text-foreground">
+        {title}
+      </h3>
       <p className="eyebrow mt-1 text-muted-foreground">{tag}</p>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{description}</p>
       <div className="mt-6 h-px w-12 bg-[var(--accent)]" />

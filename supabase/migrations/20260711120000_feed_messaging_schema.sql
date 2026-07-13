@@ -41,8 +41,14 @@ AS $$
     )
 $$;
 
--- RLS-policy internal only (same convention as has_role()) — not a public RPC.
-REVOKE EXECUTE ON FUNCTION public.can_view_mode(UUID, public.app_mode) FROM PUBLIC, anon, authenticated;
+-- NOTE: despite the has_role() precedent elsewhere in this repo, Postgres
+-- DOES require the querying role to hold EXECUTE on a function invoked from
+-- an RLS policy's USING clause — revoking from `authenticated` here broke
+-- every profiles read/write that goes through RLS (supabase-js's .update()
+-- requests the row back, which evaluates the SELECT policy calling this).
+-- Only anon is revoked; authenticated needs it.
+REVOKE EXECUTE ON FUNCTION public.can_view_mode(UUID, public.app_mode) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.can_view_mode(UUID, public.app_mode) TO authenticated;
 
 -- ── Posts (Feed) ─────────────────────────────────────────────────────────
 -- author_id/user_id/sender_id below reference public.profiles(id) rather than
@@ -151,8 +157,10 @@ AS $$
   )
 $$;
 
--- RLS-policy internal only — not a public RPC.
-REVOKE EXECUTE ON FUNCTION public.is_thread_member(UUID, UUID) FROM PUBLIC, anon, authenticated;
+-- Same fix as can_view_mode above: authenticated needs EXECUTE since this
+-- runs inside RLS policies evaluated for that role.
+REVOKE EXECUTE ON FUNCTION public.is_thread_member(UUID, UUID) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_thread_member(UUID, UUID) TO authenticated;
 
 -- Reads are RLS-gated by membership; writes go exclusively through the
 -- SECURITY DEFINER RPCs below (no direct INSERT/UPDATE/DELETE policies),

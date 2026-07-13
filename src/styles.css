@@ -55,6 +55,7 @@
   --color-mode-brotherhood-foreground: var(--mode-brotherhood-foreground);
   --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
   --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "Amiri", "Traditional Arabic", serif;
 }
 
 /* === Premium Editorial palette ===
@@ -169,6 +170,7 @@
   }
   .font-display { font-family: var(--font-display); letter-spacing: var(--tracking-display); }
   .font-body { font-family: var(--font-body); }
+  .font-arabic { font-family: var(--font-arabic); }
   .eyebrow {
     font-family: var(--font-body);
     text-transform: uppercase;

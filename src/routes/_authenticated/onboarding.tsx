@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Heart, Users, ShieldCheck } from "lucide-react";
 import { useCompleteOnboarding } from "@/lib/queries/profiles";
+import { LogoMark } from "@/components/logo-mark";
 import type { AppMode } from "@/lib/modes";
 import { toast } from "sonner";
 
@@ -18,13 +19,13 @@ const GENDER_OPTIONS: {
 }[] = [
   {
     value: "female",
-    label: "Sister",
+    label: "Female",
     primaryMode: "sisterhood",
     icon: <Users className="h-5 w-5" />,
   },
   {
     value: "male",
-    label: "Brother",
+    label: "Male",
     primaryMode: "brotherhood",
     icon: <ShieldCheck className="h-5 w-5" />,
   },
@@ -52,9 +53,7 @@ function OnboardingPage() {
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6 py-10">
       <div className="mb-8 text-center">
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[var(--gradient-hero)] text-2xl font-semibold text-primary-foreground shadow-[var(--shadow-elevated)]">
-          ﷲ
-        </span>
+        <LogoMark className="mx-auto h-14 w-14 text-2xl shadow-[var(--shadow-elevated)]" />
         <h1 className="font-display mt-4 text-3xl font-medium tracking-tight text-foreground">
           Welcome to Ummah
         </h1>
@@ -74,7 +73,7 @@ function OnboardingPage() {
       />
 
       <label className="mt-6 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        You are a
+        Gender
       </label>
       <div className="mt-1.5 grid grid-cols-2 gap-3">
         {GENDER_OPTIONS.map((opt) => (

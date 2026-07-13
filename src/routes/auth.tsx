@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { LogoMark } from "@/components/logo-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,14 +100,17 @@ function AuthPage() {
     <div className="min-h-screen bg-[var(--app-canvas)]">
       {/* Editorial header */}
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" /> Home
         </Link>
         <Link to="/" className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--gradient-hero)] text-sm font-semibold text-primary-foreground">
-            ﷲ
+          <LogoMark className="h-8 w-8 text-sm" />
+          <span className="font-display text-xl font-semibold tracking-tight text-foreground">
+            Ummah
           </span>
-          <span className="font-display text-xl font-semibold tracking-tight text-foreground">Ummah</span>
         </Link>
       </div>
 
@@ -115,11 +119,12 @@ function AuthPage() {
         <div className="hidden md:block">
           <p className="eyebrow text-muted-foreground">Members only</p>
           <h1 className="font-display mt-3 text-5xl font-medium leading-[1.05] tracking-tight text-foreground">
-            Step inside a <span className="italic text-[var(--mode-matrimonial)]">verified</span> circle.
+            Step inside a <span className="italic text-[var(--mode-matrimonial)]">verified</span>{" "}
+            circle.
           </h1>
           <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
-            Every member is checked against a government ID and a 3-second liveness video before they
-            can be discovered. Modesty-first by design.
+            Every member is checked against a government ID and a 3-second liveness video before
+            they can be discovered. Modesty-first by design.
           </p>
           <div className="mt-8 flex items-center gap-3 text-xs text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-[var(--mode-brotherhood)]" />
@@ -131,15 +136,39 @@ function AuthPage() {
         <div className="rounded-[var(--radius-2xl)] border border-border bg-card p-7 shadow-[var(--shadow-elevated)] md:p-9">
           <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted p-1">
-              <TabsTrigger value="signin" className="rounded-full">Sign in</TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-full">Create account</TabsTrigger>
+              <TabsTrigger value="signin" className="rounded-full">
+                Sign in
+              </TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-full">
+                Create account
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin" className="mt-6">
               <form onSubmit={handleSignIn} className="space-y-4" autoComplete="on">
-                <Field id="si-email" label="Email" type="email" autoComplete="email" value={siEmail} onChange={setSiEmail} />
-                <Field id="si-pass" label="Password" type="password" autoComplete="current-password" value={siPass} onChange={setSiPass} />
-                <Button type="submit" className="h-11 w-full rounded-full text-sm font-medium" disabled={loading}>
+                <Field
+                  id="si-email"
+                  name="email"
+                  label="Email"
+                  type="email"
+                  autoComplete="email"
+                  value={siEmail}
+                  onChange={setSiEmail}
+                />
+                <Field
+                  id="si-pass"
+                  name="password"
+                  label="Password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={siPass}
+                  onChange={setSiPass}
+                />
+                <Button
+                  type="submit"
+                  className="h-11 w-full rounded-full text-sm font-medium"
+                  disabled={loading}
+                >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Sign in
                 </Button>
                 <p className="text-center text-[11px] text-muted-foreground">
@@ -150,12 +179,37 @@ function AuthPage() {
 
             <TabsContent value="signup" className="mt-6">
               <form onSubmit={handleSignUp} className="space-y-4" autoComplete="on">
-                <Field id="su-name" label="Display name" autoComplete="name" value={suName} onChange={setSuName} />
-                <Field id="su-email" label="Email" type="email" autoComplete="email" value={suEmail} onChange={setSuEmail} />
-                <Field id="su-pass" label="Password" type="password" autoComplete="new-password" value={suPass} onChange={setSuPass}
-                  hint="8+ chars · upper, lower, number" />
+                <Field
+                  id="su-name"
+                  name="name"
+                  label="Display name"
+                  autoComplete="name"
+                  value={suName}
+                  onChange={setSuName}
+                />
+                <Field
+                  id="su-email"
+                  name="email"
+                  label="Email"
+                  type="email"
+                  autoComplete="email"
+                  value={suEmail}
+                  onChange={setSuEmail}
+                />
+                <Field
+                  id="su-pass"
+                  name="new-password"
+                  label="Password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={suPass}
+                  onChange={setSuPass}
+                  hint="8+ chars · upper, lower, number"
+                />
                 <div className="space-y-2">
-                  <Label className="eyebrow text-muted-foreground">Gender · required for verification</Label>
+                  <Label className="eyebrow text-muted-foreground">
+                    Gender · required for verification
+                  </Label>
                   <RadioGroup
                     value={suGender}
                     onValueChange={(v) => setSuGender(v as "male" | "female")}
@@ -172,7 +226,11 @@ function AuthPage() {
                     Confirmed by ID + liveness check before unlocking gender-locked modes.
                   </p>
                 </div>
-                <Button type="submit" className="h-11 w-full rounded-full text-sm font-medium" disabled={loading}>
+                <Button
+                  type="submit"
+                  className="h-11 w-full rounded-full text-sm font-medium"
+                  disabled={loading}
+                >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create account
                 </Button>
               </form>
@@ -185,16 +243,32 @@ function AuthPage() {
 }
 
 function Field({
-  id, label, value, onChange, type = "text", autoComplete, hint,
+  id,
+  name,
+  label,
+  value,
+  onChange,
+  type = "text",
+  autoComplete,
+  hint,
 }: {
-  id: string; label: string; value: string; onChange: (v: string) => void;
-  type?: string; autoComplete?: string; hint?: string;
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  autoComplete?: string;
+  hint?: string;
 }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id} className="eyebrow text-muted-foreground">{label}</Label>
+      <Label htmlFor={id} className="eyebrow text-muted-foreground">
+        {label}
+      </Label>
       <Input
         id={id}
+        name={name}
         type={type}
         required
         autoComplete={autoComplete}

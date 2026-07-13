@@ -1,5 +1,15 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { Home, Compass, MessageCircle, User, Heart, Users, ShieldCheck, ChevronDown, LogOut } from "lucide-react";
+import {
+  Home,
+  Compass,
+  MessageCircle,
+  User,
+  Heart,
+  Users,
+  ShieldCheck,
+  ChevronDown,
+  LogOut,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useActiveMode } from "@/lib/active-mode";
 import { MODES, type AppMode } from "@/lib/modes";
@@ -11,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LogoMark } from "@/components/logo-mark";
 import { cn } from "@/lib/utils";
 
 const MODE_ICON: Record<AppMode, React.ReactNode> = {
@@ -42,12 +53,14 @@ export function AppShell() {
       >
         <div className="mx-auto flex max-w-xl items-center justify-between px-5 py-3.5">
           <Link to="/feed" className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--gradient-hero)] text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)]">
-              ﷲ
-            </span>
+            <LogoMark className="h-8 w-8 text-sm" />
             <span className="flex flex-col leading-none">
-              <span className="font-display text-xl font-semibold tracking-tight text-foreground">Ummah</span>
-              <span className="eyebrow mt-0.5 text-[9px] text-muted-foreground">{meta.tagline}</span>
+              <span className="font-display text-xl font-semibold tracking-tight text-foreground">
+                Ummah
+              </span>
+              <span className="eyebrow mt-0.5 text-[9px] text-muted-foreground">
+                {meta.tagline}
+              </span>
             </span>
           </Link>
 
@@ -67,8 +80,13 @@ export function AppShell() {
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60 rounded-2xl border-border/60 p-1.5 shadow-[var(--shadow-elevated)]">
-              <DropdownMenuLabel className="eyebrow px-2 py-1.5 text-muted-foreground">Switch mode</DropdownMenuLabel>
+            <DropdownMenuContent
+              align="end"
+              className="w-60 rounded-2xl border-border/60 p-1.5 shadow-[var(--shadow-elevated)]"
+            >
+              <DropdownMenuLabel className="eyebrow px-2 py-1.5 text-muted-foreground">
+                Switch mode
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {(Object.keys(MODES) as AppMode[]).map((m) => {
                 const isAvailable = available.includes(m);
@@ -85,14 +103,22 @@ export function AppShell() {
                     >
                       {MODE_ICON[m]}
                     </span>
-                    <span className="font-display flex-1 text-base text-foreground">{MODES[m].title}</span>
-                    {!isAvailable && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Locked</span>}
+                    <span className="font-display flex-1 text-base text-foreground">
+                      {MODES[m].title}
+                    </span>
+                    {!isAvailable && (
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Locked
+                      </span>
+                    )}
                   </DropdownMenuItem>
                 );
               })}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/modes" className="cursor-pointer rounded-xl">Manage modes</Link>
+                <Link to="/modes" className="cursor-pointer rounded-xl">
+                  Manage modes
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => signOut()} className="rounded-xl text-destructive">
                 <LogOut className="mr-2 h-4 w-4" /> Sign out
