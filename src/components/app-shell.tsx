@@ -36,7 +36,10 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-[var(--app-canvas)]">
       {/* Editorial header — serif wordmark + mode chip */}
-      <header className="sticky top-0 z-30 border-b border-border/50 bg-background/85 backdrop-blur-xl">
+      <header
+        className="sticky top-0 z-30 border-b border-border/50 bg-background/85 backdrop-blur-xl"
+        style={{ paddingTop: "var(--safe-area-top)" }}
+      >
         <div className="mx-auto flex max-w-xl items-center justify-between px-5 py-3.5">
           <Link to="/feed" className="flex items-center gap-2.5">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--gradient-hero)] text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)]">
@@ -104,7 +107,10 @@ export function AppShell() {
       </main>
 
       {/* Floating editorial pill */}
-      <nav className="fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
+      <nav
+        className="fixed inset-x-0 z-30 flex justify-center px-4"
+        style={{ bottom: "calc(1.25rem + var(--safe-area-bottom))" }}
+      >
         <div className="flex items-center gap-1 rounded-full border border-border/60 bg-card/95 p-1.5 shadow-[var(--shadow-elevated)] backdrop-blur-xl">
           {TABS.map((t) => {
             const isActive = path.startsWith(t.to);

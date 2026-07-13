@@ -65,6 +65,11 @@
 :root {
   --radius: 1rem;
 
+  /* Safe areas (notch / home indicator) — env() is 0 on web, so these are
+     harmless there and only matter inside the Capacitor native shell. */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
   /* Surfaces */
   --background: oklch(0.975 0.012 85);            /* warm ivory */
   --foreground: oklch(0.18 0.02 240);             /* near-black ink */
