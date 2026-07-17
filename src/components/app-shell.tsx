@@ -1,4 +1,4 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Home,
   Compass,
@@ -41,6 +41,12 @@ export function AppShell() {
   const { signOut } = useAuth();
   const { active, setActive, available } = useActiveMode();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/auth" });
+  };
 
   const meta = MODES[active];
 
@@ -120,7 +126,7 @@ export function AppShell() {
                   Manage modes
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => signOut()} className="rounded-xl text-destructive">
+              <DropdownMenuItem onSelect={handleSignOut} className="rounded-xl text-destructive">
                 <LogOut className="mr-2 h-4 w-4" /> Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
