@@ -49,7 +49,7 @@ function Landing() {
         <div className="mx-auto max-w-5xl px-6 pt-20 pb-24 text-center md:pt-28 md:pb-32">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-1.5 text-xs font-medium text-muted-foreground shadow-[var(--shadow-soft)] backdrop-blur">
             <BadgeCheck className="h-3.5 w-3.5 text-[var(--mode-brotherhood)]" />
-            Government ID + Liveness verified · Wali-friendly
+            Government ID + selfie verified · Wali-friendly
           </div>
 
           <h1 className="font-display mt-8 text-balance text-5xl font-medium leading-[1.02] tracking-tight text-foreground md:text-7xl">
@@ -134,8 +134,8 @@ function Landing() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="grid gap-12 md:grid-cols-3">
             <Pillar
-              n="ID + Liveness"
-              body="Every member passes a government-ID check and a 3-second liveness video. No catfishing."
+              n="ID + Selfie"
+              body="Every member passes a government-ID check and a selfie match via Stripe Identity. No catfishing."
             />
             <Pillar
               n="Strict gender-lock"
@@ -151,6 +151,14 @@ function Landing() {
 
       <footer className="mx-auto max-w-6xl px-6 py-12 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} Ummah · Built for the Muslim community.
+        <div className="mt-2 flex items-center justify-center gap-4">
+          <Link to="/privacy" className="underline hover:text-foreground">
+            Privacy Policy
+          </Link>
+          <Link to="/child-safety" className="underline hover:text-foreground">
+            Child Safety Standards
+          </Link>
+        </div>
       </footer>
     </div>
   );
