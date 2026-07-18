@@ -1,9 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Users as UsersIcon, ShieldCheck } from "lucide-react";
+import { Search, Users as UsersIcon, ShieldCheck, Plus } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
 import { useThreads, type ThreadSummary } from "@/lib/queries/threads";
+import { useCreateGroup } from "@/lib/queries/groups";
 import { EmptyState } from "@/components/empty-state";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/messages/")({
   head: () => ({ meta: [{ title: "Chats · Ummah" }] }),
@@ -11,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/_app/messages/")({
 });
 
 function threadTitle(t: ThreadSummary): string {
-  if (t.kind === "group") return t.title ?? "Group";
+  if (t.kind === "group" || t.kind === "community") return t.title ?? "Group";
   return t.otherMembers[0]?.display_name ?? "Conversation";
 }
 
@@ -36,6 +41,7 @@ function MessagesPage() {
               Chats
             </h2>
           </div>
+          {active !== "matrimonial" && <CreateGroupSheet mode={active} />}
         </div>
         <div className="mt-4 flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2.5">
           <Search className="h-4 w-4 text-muted-foreground" />
@@ -65,10 +71,61 @@ function MessagesPage() {
   );
 }
 
+function CreateGroupSheet({ mode }: { mode: "sisterhood" | "brotherhood" }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const createGroup = useCreateGroup();
+
+  const submit = async () => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    try {
+      await createGroup.mutateAsync({ mode, title: trimmed });
+      toast.success("Group created.");
+      setTitle("");
+      setOpen(false);
+    } catch {
+      toast.error("Couldn't create that group.");
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <button className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium shadow-[var(--shadow-soft)]">
+          <Plus className="h-3.5 w-3.5" /> New group
+        </button>
+      </SheetTrigger>
+      <SheetContent side="bottom" className="rounded-t-[var(--radius-2xl)]">
+        <SheetHeader>
+          <SheetTitle className="font-display text-2xl font-medium">Create a group</SheetTitle>
+        </SheetHeader>
+        <div className="mt-4 space-y-4">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Group name"
+            maxLength={100}
+          />
+          <Button
+            className="w-full rounded-full"
+            disabled={!title.trim() || createGroup.isPending}
+            onClick={submit}
+          >
+            {createGroup.isPending ? "Creating…" : "Create"}
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 function ThreadRow({ t }: { t: ThreadSummary }) {
   const title = threadTitle(t);
-  const subline =
-    t.kind === "group" ? `${t.members.length} members${t.has_wali ? " · Wali present" : ""}` : "";
+  const isMultiMember = t.kind !== "dm";
+  const subline = isMultiMember
+    ? `${t.members.length} members${t.has_wali ? " · Wali present" : ""}`
+    : "";
 
   return (
     <li>
@@ -77,7 +134,7 @@ function ThreadRow({ t }: { t: ThreadSummary }) {
         params={{ id: t.id }}
         className="flex items-center gap-3.5 px-5 py-3.5 transition hover:bg-card/60"
       >
-        {t.kind === "group" ? (
+        {isMultiMember ? (
           <div className="relative h-14 w-14 shrink-0">
             {t.otherMembers[0]?.avatarUrl && (
               <img
@@ -117,7 +174,7 @@ function ThreadRow({ t }: { t: ThreadSummary }) {
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 truncate font-display text-lg font-medium tracking-tight text-foreground">
               {title}
-              {t.kind === "group" && <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />}
+              {isMultiMember && <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />}
             </span>
           </div>
           {subline && <div className="text-[11px] text-muted-foreground">{subline}</div>}

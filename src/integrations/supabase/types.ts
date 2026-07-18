@@ -489,7 +489,9 @@ export type Database = {
       }
       threads: {
         Row: {
+          allow_cross_gender: boolean
           created_at: string
+          creator_id: string | null
           has_wali: boolean
           id: string
           kind: string
@@ -498,7 +500,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_cross_gender?: boolean
           created_at?: string
+          creator_id?: string | null
           has_wali?: boolean
           id?: string
           kind?: string
@@ -507,7 +511,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_cross_gender?: boolean
           created_at?: string
+          creator_id?: string | null
           has_wali?: boolean
           id?: string
           kind?: string
@@ -515,7 +521,22 @@ export type Database = {
           title?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "threads_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "threads_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -607,6 +628,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_group: {
+        Args: { _mode: Database["public"]["Enums"]["app_mode"]; _title: string }
+        Returns: string
+      }
       create_post: {
         Args: {
           _caption?: string
@@ -619,12 +644,42 @@ export type Database = {
         }
         Returns: string
       }
+      get_connections: {
+        Args: { _mode: Database["public"]["Enums"]["app_mode"] }
+        Returns: {
+          avatar_path: string | null
+          bio: string | null
+          blur_photos: boolean | null
+          city: string | null
+          country: string | null
+          cover_path: string | null
+          created_at: string | null
+          display_name: string | null
+          has_kids: boolean | null
+          id: string | null
+          is_verified: boolean | null
+          kids_age_groups: string[] | null
+          marital_status: Database["public"]["Enums"]["marital_status"] | null
+          primary_mode: Database["public"]["Enums"]["app_mode"] | null
+          verified_gender: Database["public"]["Enums"]["gender"] | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "discoverable_profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      invite_to_group: {
+        Args: { _invitee_id: string; _thread_id: string }
+        Returns: undefined
       }
       is_thread_member: {
         Args: { _thread_id: string; _user_id: string }
