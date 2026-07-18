@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import {
   Home,
   Compass,
@@ -152,14 +153,21 @@ export function AppShell() {
                 key={t.to}
                 to={t.to}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all",
-                  isActive
-                    ? "bg-[var(--gradient-ink)] text-accent shadow-[var(--shadow-ink)]"
-                    : "text-muted-foreground hover:text-foreground",
+                  "relative flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-colors",
+                  isActive ? "text-accent" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.4 : 1.9} />
-                <span className={cn(isActive ? "inline" : "hidden sm:inline")}>{t.label}</span>
+                {isActive && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    className="absolute inset-0 rounded-full bg-[var(--gradient-ink)] shadow-[var(--shadow-ink)]"
+                  />
+                )}
+                <span className="relative flex items-center gap-1.5">
+                  <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.4 : 1.9} />
+                  <span className={cn(isActive ? "inline" : "hidden sm:inline")}>{t.label}</span>
+                </span>
               </Link>
             );
           })}

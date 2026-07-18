@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
   MessageCircle,
@@ -58,12 +59,17 @@ function FeedPage() {
 
   return (
     <div>
-      <div className="px-5 pt-6 pb-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="px-5 pt-6 pb-3"
+      >
         <p className="eyebrow text-muted-foreground">Today · {meta.tagline}</p>
         <h2 className="font-display mt-1 text-3xl font-medium tracking-tight text-foreground">
           {meta.title}
         </h2>
-      </div>
+      </motion.div>
 
       <div className="space-y-5 py-5">
         {!isLoading && (!posts || posts.length === 0) && (
@@ -72,10 +78,11 @@ function FeedPage() {
             description={`Nothing shared in ${meta.title} yet. Check back soon, in shaa Allah.`}
           />
         )}
-        {posts?.map((post) => (
+        {posts?.map((post, i) => (
           <PostCard
             key={post.id}
             post={post}
+            index={i}
             onLike={() => toggleLike.mutate({ postId: post.id, liked: post.likedByMe })}
             onVote={(optionId) => voteOnPoll.mutate({ postId: post.id, optionId })}
             onComment={() => setCommentsPostId(post.id)}
@@ -99,21 +106,35 @@ function FeedPage() {
 
 function PostCard({
   post,
+  index,
   onLike,
   onVote,
   onComment,
   onReport,
 }: {
   post: FeedPost;
+  index: number;
   onLike: () => void;
   onVote: (optionId: string) => void;
   onComment: () => void;
   onReport: () => void;
 }) {
   const totalVotes = post.pollOptions.reduce((sum, o) => sum + o.voteCount, 0);
+  const [burst, setBurst] = useState(false);
+
+  const doubleTapLike = () => {
+    if (!post.likedByMe) onLike();
+    setBurst(true);
+    setTimeout(() => setBurst(false), 700);
+  };
 
   return (
-    <article className="mx-4 overflow-hidden rounded-[var(--radius-2xl)] border border-border bg-card shadow-[var(--shadow-soft)]">
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: Math.min(index, 6) * 0.05 }}
+      className="mx-4 overflow-hidden rounded-[var(--radius-2xl)] border border-border bg-card shadow-[var(--shadow-soft)]"
+    >
       <header className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           {post.author?.avatarUrl && (
@@ -148,7 +169,10 @@ function PostCard({
       </header>
 
       {post.post_type === "photo" && post.imageUrl && (
-        <div className="aspect-square w-full overflow-hidden bg-muted">
+        <div
+          className="relative aspect-square w-full overflow-hidden bg-muted"
+          onDoubleClick={doubleTapLike}
+        >
           {isVideoPath(post.image_path) ? (
             <video
               src={post.imageUrl}
@@ -161,6 +185,19 @@ function PostCard({
           ) : (
             <img src={post.imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
           )}
+          <AnimatePresence>
+            {burst && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1.15 }}
+                exit={{ opacity: 0, scale: 1.4 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="pointer-events-none absolute inset-0 grid place-items-center"
+              >
+                <Heart className="h-24 w-24 fill-white text-white drop-shadow-lg" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -205,9 +242,11 @@ function PostCard({
                 onClick={() => onVote(opt.id)}
                 className="relative block w-full overflow-hidden rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm"
               >
-                <div
-                  className="absolute inset-y-0 left-0 bg-muted transition-all"
-                  style={{ width: `${pct}%` }}
+                <motion.div
+                  initial={false}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="absolute inset-y-0 left-0 bg-muted"
                 />
                 <div className="relative flex items-center justify-between">
                   <span className="flex items-center gap-1.5 font-medium text-foreground">
@@ -228,9 +267,17 @@ function PostCard({
       <div className="flex items-center justify-between px-3 py-2">
         <div className="flex items-center gap-1">
           <IconBtn onClick={onLike}>
-            <Heart
-              className={`h-5 w-5 ${post.likedByMe ? "fill-current text-[var(--mode-matrimonial)]" : ""}`}
-            />
+            <motion.span
+              key={post.likedByMe ? "liked" : "unliked"}
+              initial={{ scale: post.likedByMe ? 0.6 : 1 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              className="inline-block"
+            >
+              <Heart
+                className={`h-5 w-5 ${post.likedByMe ? "fill-current text-[var(--mode-matrimonial)]" : ""}`}
+              />
+            </motion.span>
           </IconBtn>
           <IconBtn onClick={onComment}>
             <MessageCircle className="h-5 w-5" />
@@ -262,7 +309,7 @@ function PostCard({
           <ModeBadge mode={post.mode} />
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
