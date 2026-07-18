@@ -11,6 +11,8 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
   component: OnboardingPage,
 });
 
+type MaritalStatus = "single" | "married" | "divorced" | "separated" | "widowed";
+
 const GENDER_OPTIONS: {
   value: "male" | "female";
   label: string;
@@ -31,19 +33,29 @@ const GENDER_OPTIONS: {
   },
 ];
 
+const MARITAL_OPTIONS: { value: MaritalStatus; label: string }[] = [
+  { value: "single", label: "Single" },
+  { value: "married", label: "Married" },
+  { value: "divorced", label: "Divorced" },
+  { value: "separated", label: "Separated" },
+  { value: "widowed", label: "Widowed" },
+];
+
 function OnboardingPage() {
   const navigate = useNavigate();
   const complete = useCompleteOnboarding();
   const [displayName, setDisplayName] = useState("");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
+  const [maritalStatus, setMaritalStatus] = useState<MaritalStatus | null>(null);
 
   const submit = async () => {
     const trimmed = displayName.trim();
     if (!trimmed) return toast.error("Enter your name.");
     if (!gender) return toast.error("Select whether you're a sister or brother.");
+    if (!maritalStatus) return toast.error("Select your marital status.");
     const primaryMode = gender === "female" ? "sisterhood" : "brotherhood";
     try {
-      await complete.mutateAsync({ displayName: trimmed, gender, primaryMode });
+      await complete.mutateAsync({ displayName: trimmed, gender, maritalStatus, primaryMode });
       navigate({ to: "/feed" });
     } catch {
       toast.error("Something went wrong — try again.");
@@ -91,8 +103,29 @@ function OnboardingPage() {
           </button>
         ))}
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        This unlocks Sisterhood/Brotherhood right away. Nikah unlocks after identity verification.
+
+      <label className="mt-6 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        Marital status
+      </label>
+      <div className="mt-1.5 grid grid-cols-2 gap-2">
+        {MARITAL_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setMaritalStatus(opt.value)}
+            className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+              maritalStatus === opt.value
+                ? "border-foreground/60 bg-[var(--gradient-card)]"
+                : "border-border bg-card"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-3 text-xs text-muted-foreground">
+        Verifying your ID (next step) unlocks Sisterhood/Brotherhood. Nikah also unlocks then, if
+        you're not currently married.
       </p>
 
       <button

@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      connection_requests: {
+        Row: {
+          created_at: string
+          id: string
+          mode: Database["public"]["Enums"]["app_mode"]
+          recipient_id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mode: Database["public"]["Enums"]["app_mode"]
+          recipient_id: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mode?: Database["public"]["Enums"]["app_mode"]
+          recipient_id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connection_requests_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_requests_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string
@@ -740,6 +799,32 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_nearby_profiles: {
+        Args: {
+          _lat: number
+          _lng: number
+          _mode: Database["public"]["Enums"]["app_mode"]
+          _radius_miles?: number
+        }
+        Returns: {
+          avatar_path: string
+          bio: string
+          blur_photos: boolean
+          city: string
+          connection_status: string
+          country: string
+          cover_path: string
+          display_name: string
+          distance_miles: number
+          has_kids: boolean
+          id: string
+          is_verified: boolean
+          kids_age_groups: string[]
+          marital_status: Database["public"]["Enums"]["marital_status"]
+          primary_mode: Database["public"]["Enums"]["app_mode"]
+          verified_gender: Database["public"]["Enums"]["gender"]
+        }[]
+      }
       get_wali_invite_info: {
         Args: { _token: string }
         Returns: {
@@ -765,6 +850,17 @@ export type Database = {
         Returns: boolean
       }
       redeem_wali_invite: { Args: { _token: string }; Returns: string }
+      respond_to_connection_request: {
+        Args: { _accept: boolean; _request_id: string }
+        Returns: string
+      }
+      send_connection_request: {
+        Args: {
+          _mode: Database["public"]["Enums"]["app_mode"]
+          _recipient_id: string
+        }
+        Returns: string
+      }
       send_message: {
         Args: { _body: string; _thread_id: string }
         Returns: {
@@ -798,7 +894,7 @@ export type Database = {
       app_mode: "matrimonial" | "sisterhood" | "brotherhood"
       app_role: "admin" | "user" | "wali"
       gender: "male" | "female"
-      marital_status: "single" | "divorced" | "separated" | "widowed"
+      marital_status: "single" | "divorced" | "separated" | "widowed" | "married"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -929,7 +1025,7 @@ export const Constants = {
       app_mode: ["matrimonial", "sisterhood", "brotherhood"],
       app_role: ["admin", "user", "wali"],
       gender: ["male", "female"],
-      marital_status: ["single", "divorced", "separated", "widowed"],
+      marital_status: ["single", "divorced", "separated", "widowed", "married"],
     },
   },
 } as const

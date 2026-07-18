@@ -85,7 +85,7 @@ function Landing() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            then ${PRICING.basePrice}/mo per mode · add-on ${PRICING.addOnPrice}/mo
+            then ${PRICING.basePrice}/mo — covers every mode you're eligible for
           </p>
         </div>
       </section>

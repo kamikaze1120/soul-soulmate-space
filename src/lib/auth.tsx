@@ -6,6 +6,7 @@ type Profile = {
   id: string;
   display_name: string | null;
   verified_gender: "male" | "female" | null;
+  marital_status: "single" | "married" | "divorced" | "separated" | "widowed" | null;
   is_verified: boolean;
   primary_mode: "matrimonial" | "sisterhood" | "brotherhood" | null;
 };
@@ -44,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [{ data: prof }, { data: ents }, { data: roles }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, display_name, verified_gender, is_verified, primary_mode")
+        .select("id, display_name, verified_gender, marital_status, is_verified, primary_mode")
         .eq("id", uid)
         .maybeSingle(),
       supabase

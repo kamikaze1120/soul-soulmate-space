@@ -149,7 +149,18 @@ function PostCard({
 
       {post.post_type === "photo" && post.imageUrl && (
         <div className="aspect-square w-full overflow-hidden bg-muted">
-          <img src={post.imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+          {isVideoPath(post.image_path) ? (
+            <video
+              src={post.imageUrl}
+              className="h-full w-full object-cover"
+              controls
+              loop
+              muted
+              playsInline
+            />
+          ) : (
+            <img src={post.imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+          )}
         </div>
       )}
 
@@ -253,6 +264,14 @@ function PostCard({
       </div>
     </article>
   );
+}
+
+const VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm", ".m4v"];
+
+function isVideoPath(path: string | null): boolean {
+  if (!path) return false;
+  const lower = path.toLowerCase();
+  return VIDEO_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
 function IconBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {

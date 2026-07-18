@@ -2,10 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { stripe } from "@/lib/stripe.server";
-import { MODES, PRICING, type AppMode } from "@/lib/modes";
+import { PRICING, eligibleModes } from "@/lib/modes";
 import type { Database } from "@/integrations/supabase/types";
-
-const APP_MODES = new Set<AppMode>(["matrimonial", "sisterhood", "brotherhood"]);
 
 async function getOrCreateStripeCustomer(
   supabase: SupabaseClient<Database>,
@@ -35,52 +33,53 @@ async function getOrCreateStripeCustomer(
   return customer.id;
 }
 
-// Prices are built inline via Checkout's price_data (no pre-created Stripe
-// Dashboard products/prices needed — works purely from PRICING in modes.ts).
-// See the trial-fee note below: this currently does a free 7-day trial via
-// Stripe's native trial_period_days, not the $2.99 paid trial from PRICING.
-// Not yet runtime-verified against a live Stripe account (no test-mode keys
-// available while building this).
-export const createCheckoutSession = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((data: { mode: AppMode; hasExistingActiveMode: boolean }) => {
-    if (!APP_MODES.has(data.mode)) throw new Error("Invalid mode");
-    return data;
-  })
-  .handler(async ({ context, data }) => {
+// One flat subscription unlocks every mode the member is eligible for
+// (gender for Sisterhood/Brotherhood, marital status for Nikah) — there's
+// no more per-mode purchase. Price is built inline via Checkout's price_data
+// (no pre-created Stripe Dashboard product/price needed).
+// NOTE: this gives a free (Stripe-default) 7-day trial, not the $2.99 *paid*
+// trial from PRICING.trialPrice. Charging during the trial needs an invoice
+// item on the subscription's first invoice — deferred until product
+// confirms the $2.99 fee is still wanted vs. a free trial.
+export const createCheckoutSession = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(
+  async ({ context }) => {
     const { supabase, userId, claims } = context;
+
+    const [{ data: profile }, { data: roles }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("verified_gender, marital_status, is_verified")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", userId),
+    ]);
+
+    // Wali accounts are free and never unlock modes at all — nothing to
+    // check out for.
+    if ((roles ?? []).some((r) => r.role === "wali")) {
+      throw new Error("Wali accounts don't need a subscription.");
+    }
+    if (!profile?.is_verified) {
+      throw new Error("Verify your identity before subscribing.");
+    }
+
+    const isAdmin = (roles ?? []).some((r) => r.role === "admin");
+    const modes = eligibleModes(
+      profile.verified_gender,
+      profile.marital_status,
+      profile.is_verified,
+      isAdmin,
+    );
+    if (modes.length === 0) {
+      throw new Error("No modes available for your account yet.");
+    }
+
     const customerId = await getOrCreateStripeCustomer(
       supabase,
       userId,
       claims.email as string | undefined,
     );
 
-    // Wali accounts already got their 14 free days as a raw mode_entitlements
-    // row at invite redemption (not Stripe-driven) — no Stripe trial on top
-    // of that, and a flat lower price regardless of how many modes a regular
-    // member already has active (wali only ever has the one).
-    const { data: waliRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "wali")
-      .maybeSingle();
-    const isWali = !!waliRole;
-
-    const monthlyAmount = Math.round(
-      (isWali
-        ? PRICING.waliPrice
-        : data.hasExistingActiveMode
-          ? PRICING.addOnPrice
-          : PRICING.basePrice) * 100,
-    );
-    const productName = `Ummah — ${MODES[data.mode].title}${isWali ? " (Wali)" : ""}`;
-
-    // NOTE: for regular members this gives a free (Stripe-default) 7-day
-    // trial, not the $2.99 *paid* trial from PRICING.trialPrice. Charging
-    // during the trial needs an invoice item on the subscription's first
-    // invoice — deferred until product confirms the $2.99 fee is still
-    // wanted vs. a free trial.
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
@@ -89,28 +88,27 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           price_data: {
             currency: "usd",
             recurring: { interval: "month" },
-            unit_amount: monthlyAmount,
-            product_data: { name: productName },
+            unit_amount: Math.round(PRICING.basePrice * 100),
+            product_data: { name: "Ummah membership" },
           },
           quantity: 1,
         },
       ],
-      subscription_data: isWali
-        ? { metadata: { supabase_user_id: userId, mode: data.mode } }
-        : {
-            trial_period_days: PRICING.trialDays,
-            trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
-            metadata: { supabase_user_id: userId, mode: data.mode },
-          },
+      subscription_data: {
+        trial_period_days: PRICING.trialDays,
+        trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
+        metadata: { supabase_user_id: userId, modes: modes.join(",") },
+      },
       payment_method_collection: "if_required",
       success_url: `${getAppOrigin()}/modes?checkout=success`,
       cancel_url: `${getAppOrigin()}/modes?checkout=cancelled`,
-      metadata: { supabase_user_id: userId, mode: data.mode },
+      metadata: { supabase_user_id: userId, modes: modes.join(",") },
     });
 
     if (!session.url) throw new Error("Stripe did not return a checkout URL.");
     return { url: session.url };
-  });
+  },
+);
 
 export const createBillingPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

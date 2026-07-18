@@ -60,6 +60,7 @@ export function useCompleteOnboarding() {
     mutationFn: async (input: {
       displayName: string;
       gender: "male" | "female";
+      maritalStatus: "single" | "married" | "divorced" | "separated" | "widowed";
       primaryMode: AppMode;
     }) => {
       if (!user) throw new Error("Not authenticated");
@@ -68,6 +69,7 @@ export function useCompleteOnboarding() {
         .update({
           display_name: input.displayName,
           verified_gender: input.gender,
+          marital_status: input.maritalStatus,
           primary_mode: input.primaryMode,
         })
         .eq("id", user.id);

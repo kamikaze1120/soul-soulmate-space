@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type { AppMode } from "./modes";
 import { useAuth } from "./auth";
-import { visibleModes } from "./modes";
+import { eligibleModes } from "./modes";
 
 type Ctx = {
   active: AppMode;
@@ -14,18 +14,26 @@ const ActiveModeContext = createContext<Ctx | undefined>(undefined);
 export function ActiveModeProvider({ children }: { children: ReactNode }) {
   const { profile, entitlements, isAdmin, isWali } = useAuth();
   const available = useMemo(() => {
-    const base = new Set<AppMode>(
-      visibleModes(
-        profile?.verified_gender ?? null,
-        profile?.is_verified ?? false,
-        isAdmin,
-        isWali,
-      ),
+    const eligible = eligibleModes(
+      profile?.verified_gender ?? null,
+      profile?.marital_status ?? null,
+      profile?.is_verified ?? false,
+      isAdmin,
+      isWali,
     );
-    // Any mode the user has an active entitlement for is unlocked, regardless of gender lock.
-    for (const e of entitlements) if (e.is_active) base.add(e.mode);
-    return Array.from(base);
-  }, [profile?.verified_gender, profile?.is_verified, isAdmin, isWali, entitlements]);
+    if (isAdmin) return eligible;
+    // A single subscription must be active for a mode to actually be usable
+    // — eligibility alone (gender/marital status) is no longer enough.
+    const activeModes = new Set(entitlements.filter((e) => e.is_active).map((e) => e.mode));
+    return eligible.filter((m) => activeModes.has(m));
+  }, [
+    profile?.verified_gender,
+    profile?.marital_status,
+    profile?.is_verified,
+    isAdmin,
+    isWali,
+    entitlements,
+  ]);
   const [active, setActive] = useState<AppMode>("matrimonial");
 
   // Keep active in-bounds

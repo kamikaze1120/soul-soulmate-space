@@ -206,7 +206,10 @@ function ThreadPage() {
         })}
       </div>
 
-      <div className="sticky bottom-0 border-t border-border/50 bg-background/95 px-3 py-2.5 backdrop-blur">
+      <div
+        className="sticky bottom-0 border-t border-border/50 bg-background/95 px-3 pt-2.5 backdrop-blur"
+        style={{ paddingBottom: "calc(5.5rem + var(--safe-area-bottom))" }}
+      >
         <div className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1.5 shadow-[var(--shadow-soft)]">
           <button className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted">
             <Plus className="h-5 w-5" />

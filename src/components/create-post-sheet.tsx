@@ -131,11 +131,13 @@ export function CreatePostSheet({ mode }: { mode: AppMode }) {
 
           {(type === "photo" || type === "event") && (
             <div>
-              <Label htmlFor="image">{type === "photo" ? "Photo" : "Photo (optional)"}</Label>
+              <Label htmlFor="image">
+                {type === "photo" ? "Photo or short video" : "Photo (optional)"}
+              </Label>
               <Input
                 id="image"
                 type="file"
-                accept="image/*"
+                accept={type === "photo" ? "image/*,video/*" : "image/*"}
                 className="mt-1.5"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />

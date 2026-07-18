@@ -1,5 +1,6 @@
 export type AppMode = "matrimonial" | "sisterhood" | "brotherhood";
 export type Gender = "male" | "female";
+export type MaritalStatus = "single" | "married" | "divorced" | "separated" | "widowed";
 
 export const MODES: Record<
   AppMode,
@@ -38,38 +39,34 @@ export const MODES: Record<
   },
 };
 
+// A single flat subscription now covers every mode a member is eligible
+// for — there's no more per-mode add-on price.
 export const PRICING = {
   basePrice: 10.99,
-  addOnPrice: 5.99,
   trialPrice: 2.99,
   trialDays: 7,
-  // Wali accounts: 14 free days (granted at invite redemption, not through
-  // Stripe), then a flat $4.99/mo — cheaper than a full member since their
-  // access is read/comment-only in a single gender-locked mode.
-  waliPrice: 4.99,
-  waliTrialDays: 14,
 };
 
-// Nikah (matrimonial) is the highest-stakes mode — opposite-gender matching,
-// wali involvement — so it stays locked until Stripe Identity verification.
-// Sisterhood/Brotherhood are peer-community spaces, gender-gated only.
-// Admins bypass all of this (mirrors the can_view_mode() DB function) so a
-// single seed/admin account can post across every mode. Wali accounts get
-// no free gender-based access at all — mirrors can_view_mode()'s wali
-// carve-out — their mode access always comes from an active entitlement
-// (the 14-day trial granted at invite redemption, then a paid sub), which
-// active-mode.tsx layers on top of this via the entitlements list.
-export function visibleModes(
+// Eligibility only — separate from whether they've actually subscribed.
+// Mirrors can_view_mode()'s eligibility half exactly (the DB function
+// additionally requires an active mode_entitlements row on top of this,
+// which active-mode.tsx/modes.tsx layer on via the entitlements list).
+// Nothing is eligible before ID verification — that's a universal gate now,
+// not just a Nikah-specific one. Admins bypass everything; wali accounts
+// are eligible for nothing (they only ever see the thread(s) they were
+// invited into, gated separately by thread membership).
+export function eligibleModes(
   gender: Gender | null,
+  maritalStatus: MaritalStatus | null,
   isVerified: boolean,
   isAdmin = false,
   isWali = false,
 ): AppMode[] {
   if (isAdmin) return ["matrimonial", "sisterhood", "brotherhood"];
-  if (isWali) return [];
+  if (isWali || !isVerified) return [];
   const modes: AppMode[] = [];
-  if (isVerified) modes.push("matrimonial");
   if (gender === "female") modes.push("sisterhood");
   if (gender === "male") modes.push("brotherhood");
+  if (maritalStatus && maritalStatus !== "married") modes.push("matrimonial");
   return modes;
 }

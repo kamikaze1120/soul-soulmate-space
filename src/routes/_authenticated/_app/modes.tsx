@@ -2,9 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Heart, Users, ShieldCheck, Lock, Sparkles, Check, CreditCard } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { MODES, PRICING, visibleModes, type AppMode } from "@/lib/modes";
+import { MODES, PRICING, eligibleModes, type AppMode } from "@/lib/modes";
 import { useActiveMode } from "@/lib/active-mode";
 import { createCheckoutSession, createBillingPortalSession } from "@/lib/billing.functions";
+import { EmptyState } from "@/components/empty-state";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/modes")({
@@ -22,12 +23,13 @@ function ModesPage() {
   const { profile, entitlements, isAdmin, isWali, refresh } = useAuth();
   const { active, setActive } = useActiveMode();
   const navigate = useNavigate();
-  const [checkoutLoading, setCheckoutLoading] = useState<AppMode | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
-  const visible = useMemo(
+  const eligible = useMemo(
     () =>
-      visibleModes(
+      eligibleModes(
         profile?.verified_gender ?? null,
+        profile?.marital_status ?? null,
         profile?.is_verified ?? false,
         isAdmin,
         isWali,
@@ -35,7 +37,7 @@ function ModesPage() {
     [profile, isAdmin, isWali],
   );
   const entMap = new Map(entitlements.map((e) => [e.mode, e]));
-  const activeCount = entitlements.filter((e) => e.is_active).length;
+  const hasSubscription = isAdmin || entitlements.some((e) => e.is_active);
 
   // Stripe redirects back here with ?checkout=success|cancelled after
   // Checkout. The webhook writes mode_entitlements asynchronously, so this
@@ -54,16 +56,14 @@ function ModesPage() {
     navigate({ to: "/modes", search: {}, replace: true });
   }, [navigate, refresh]);
 
-  const startCheckout = async (mode: AppMode) => {
-    setCheckoutLoading(mode);
+  const startCheckout = async () => {
+    setCheckoutLoading(true);
     try {
-      const { url } = await createCheckoutSession({
-        data: { mode, hasExistingActiveMode: activeCount > 0 },
-      });
+      const { url } = await createCheckoutSession();
       window.location.href = url;
-    } catch {
-      toast.error("Couldn't start checkout — try again.");
-      setCheckoutLoading(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't start checkout — try again.");
+      setCheckoutLoading(false);
     }
   };
 
@@ -78,11 +78,33 @@ function ModesPage() {
     }
   };
 
+  if (isWali) {
+    return (
+      <div className="px-4 pt-5">
+        <EmptyState
+          title="Not applicable for Wali accounts"
+          description="Wali accounts are free and only take part in the conversation(s) they were invited to — there's nothing to subscribe to here."
+        />
+      </div>
+    );
+  }
+
+  if (!profile?.is_verified && !isAdmin) {
+    return (
+      <div className="px-4 pt-5">
+        <EmptyState
+          title="Verify your identity first"
+          description="Modes unlock once your ID is verified."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 pt-5">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">Mode Switcher</h2>
-        {activeCount > 0 && (
+        {hasSubscription && !isAdmin && (
           <button
             onClick={openBillingPortal}
             disabled={portalLoading}
@@ -93,25 +115,33 @@ function ModesPage() {
         )}
       </div>
       <p className="mt-1 text-sm text-muted-foreground">
-        {isWali
-          ? `Wali access: 14 days free, then $${PRICING.waliPrice}/mo.`
-          : activeCount === 0
-            ? `Start your $${PRICING.trialPrice} 7-day trial on any unlocked mode below.`
-            : `${activeCount} active · Add another for +$${PRICING.addOnPrice}/mo.`}
+        {isAdmin
+          ? "Admin — unlimited access to every mode."
+          : hasSubscription
+            ? `Subscribed · $${PRICING.basePrice}/mo covers every mode you're eligible for.`
+            : `Start your $${PRICING.trialPrice} ${PRICING.trialDays}-day trial — one subscription unlocks every mode below.`}
       </p>
+
+      {!hasSubscription && eligible.length > 0 && (
+        <button
+          onClick={startCheckout}
+          disabled={checkoutLoading}
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--mode-matrimonial)] px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        >
+          <Sparkles className="h-4 w-4" />
+          {checkoutLoading ? "Redirecting…" : `Start trial · $${PRICING.trialPrice}`}
+        </button>
+      )}
 
       <div className="mt-5 space-y-3">
         {(Object.keys(MODES) as AppMode[]).map((m) => {
           const meta = MODES[m];
           const ent = entMap.get(m);
-          const isActive = !!ent?.is_active;
-          // A wali's own invited mode is never in visibleModes() (they get no
-          // free gender-based access), but they should still see it unlocked
-          // once redeem_wali_invite() has granted them an active entitlement.
-          const isVisible = visible.includes(m) || isActive;
+          const isEligible = eligible.includes(m);
+          const isActive = isAdmin || (!!ent?.is_active && isEligible);
           const isCurrent = active === m;
 
-          if (!isVisible) {
+          if (!isEligible) {
             return (
               <div
                 key={m}
@@ -125,7 +155,7 @@ function ModesPage() {
                     <div className="font-semibold text-foreground">{meta.title}</div>
                     <div className="text-xs text-muted-foreground">
                       {m === "matrimonial"
-                        ? "Restricted — complete identity verification to unlock"
+                        ? "Not available — Nikah is for unmarried members only"
                         : `Restricted — verified ${meta.genderLock} only`}
                     </div>
                   </div>
@@ -171,37 +201,15 @@ function ModesPage() {
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground">{meta.description}</p>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {isActive ? (
-                        <button
-                          onClick={() => setActive(m)}
-                          disabled={isCurrent}
-                          className="rounded-full bg-foreground px-4 py-1.5 text-xs font-semibold text-background transition disabled:opacity-50"
-                        >
-                          {isCurrent ? "Currently active" : `Switch to ${meta.title}`}
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => startCheckout(m)}
-                            disabled={checkoutLoading !== null}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--mode-matrimonial)] px-4 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
-                          >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            {checkoutLoading === m
-                              ? "Redirecting…"
-                              : isWali
-                                ? "Subscribe"
-                                : activeCount === 0
-                                  ? `Start trial · $${PRICING.trialPrice}`
-                                  : `Add for $${PRICING.addOnPrice}/mo`}
-                          </button>
-                          <span className="text-[11px] text-muted-foreground">
-                            then ${isWali ? PRICING.waliPrice : PRICING.basePrice}/mo
-                          </span>
-                        </>
-                      )}
-                    </div>
+                    {isActive && (
+                      <button
+                        onClick={() => setActive(m)}
+                        disabled={isCurrent}
+                        className="mt-3 rounded-full bg-foreground px-4 py-1.5 text-xs font-semibold text-background transition disabled:opacity-50"
+                      >
+                        {isCurrent ? "Currently active" : `Switch to ${meta.title}`}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

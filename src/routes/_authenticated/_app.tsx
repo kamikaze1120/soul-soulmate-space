@@ -9,12 +9,23 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app")({
   beforeLoad: async ({ context }) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("primary_mode")
-      .eq("id", context.user.id)
-      .maybeSingle();
-    if (!data?.primary_mode) throw redirect({ to: "/onboarding" });
+    const [{ data: profileData }, { data: roles }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("primary_mode, is_verified")
+        .eq("id", context.user.id)
+        .maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", context.user.id),
+    ]);
+    if (!profileData?.primary_mode) throw redirect({ to: "/onboarding" });
+
+    // Verification is a universal gate now — nothing in the app works
+    // before it, not just Nikah. Admin and wali accounts are exempt: admin
+    // is trusted by definition, and wali never verifies at all (they only
+    // ever see the thread(s) they were invited into, unrelated to this).
+    const roleSet = new Set((roles ?? []).map((r) => r.role));
+    const exempt = roleSet.has("admin") || roleSet.has("wali");
+    if (!exempt && !profileData.is_verified) throw redirect({ to: "/verify" });
   },
   component: AppLayout,
 });
