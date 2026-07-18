@@ -11,20 +11,25 @@ export const createVerificationSession = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { userId } = context;
 
-    const session = await stripe.identity.verificationSessions.create({
-      type: "document",
-      metadata: { supabase_user_id: userId },
-      options: {
-        document: {
-          require_matching_selfie: true,
-          require_live_capture: true,
+    try {
+      const session = await stripe.identity.verificationSessions.create({
+        type: "document",
+        metadata: { supabase_user_id: userId },
+        options: {
+          document: {
+            require_matching_selfie: true,
+            require_live_capture: true,
+          },
         },
-      },
-      return_url: `${getAppOrigin()}/verify?result=return`,
-    });
+        return_url: `${getAppOrigin()}/verify?result=return`,
+      });
 
-    if (!session.url) throw new Error("Stripe did not return a verification URL.");
-    return { url: session.url };
+      if (!session.url) throw new Error("Stripe did not return a verification URL.");
+      return { url: session.url };
+    } catch (err) {
+      console.error("[createVerificationSession] failed", err);
+      throw err;
+    }
   });
 
 function getAppOrigin(): string {

@@ -99,6 +99,134 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_options: {
+        Row: {
+          id: string
+          label: string
+          position: number
+          post_id: string
+        }
+        Insert: {
+          id?: string
+          label: string
+          position?: number
+          post_id: string
+        }
+        Update: {
+          id?: string
+          label?: string
+          position?: number
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_likes: {
         Row: {
           created_at: string
@@ -147,25 +275,34 @@ export type Database = {
           author_id: string
           caption: string
           created_at: string
+          event_at: string | null
+          event_location: string | null
           id: string
-          image_path: string
+          image_path: string | null
           mode: Database["public"]["Enums"]["app_mode"]
+          post_type: string
         }
         Insert: {
           author_id: string
           caption?: string
           created_at?: string
+          event_at?: string | null
+          event_location?: string | null
           id?: string
-          image_path: string
+          image_path?: string | null
           mode: Database["public"]["Enums"]["app_mode"]
+          post_type?: string
         }
         Update: {
           author_id?: string
           caption?: string
           created_at?: string
+          event_at?: string | null
+          event_location?: string | null
           id?: string
-          image_path?: string
+          image_path?: string | null
           mode?: Database["public"]["Enums"]["app_mode"]
+          post_type?: string
         }
         Relationships: [
           {
@@ -470,6 +607,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_post: {
+        Args: {
+          _caption?: string
+          _event_at?: string
+          _event_location?: string
+          _image_path?: string
+          _mode: Database["public"]["Enums"]["app_mode"]
+          _poll_options?: string[]
+          _post_type: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -504,6 +653,10 @@ export type Database = {
           _other_user_id: string
         }
         Returns: string
+      }
+      vote_on_poll: {
+        Args: { _option_id: string; _post_id: string }
+        Returns: undefined
       }
     }
     Enums: {

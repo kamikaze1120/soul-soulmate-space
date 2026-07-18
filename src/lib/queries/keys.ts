@@ -10,4 +10,5 @@ export const queryKeys = {
   threads: (mode: AppMode) => ["threads", mode] as const,
   thread: (threadId: string) => ["thread", threadId] as const,
   messages: (threadId: string) => ["messages", threadId] as const,
+  comments: (postId: string) => ["comments", postId] as const,
 };
