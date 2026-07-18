@@ -55,15 +55,32 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       claims.email as string | undefined,
     );
 
-    const monthlyAmount = Math.round(
-      (data.hasExistingActiveMode ? PRICING.addOnPrice : PRICING.basePrice) * 100,
-    );
-    const productName = `Ummah — ${MODES[data.mode].title}`;
+    // Wali accounts already got their 14 free days as a raw mode_entitlements
+    // row at invite redemption (not Stripe-driven) — no Stripe trial on top
+    // of that, and a flat lower price regardless of how many modes a regular
+    // member already has active (wali only ever has the one).
+    const { data: waliRole } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "wali")
+      .maybeSingle();
+    const isWali = !!waliRole;
 
-    // NOTE: this gives a free (Stripe-default) 7-day trial, not the $2.99
-    // *paid* trial from PRICING.trialPrice. Charging during the trial needs
-    // an invoice item on the subscription's first invoice — deferred until
-    // product confirms the $2.99 fee is still wanted vs. a free trial.
+    const monthlyAmount = Math.round(
+      (isWali
+        ? PRICING.waliPrice
+        : data.hasExistingActiveMode
+          ? PRICING.addOnPrice
+          : PRICING.basePrice) * 100,
+    );
+    const productName = `Ummah — ${MODES[data.mode].title}${isWali ? " (Wali)" : ""}`;
+
+    // NOTE: for regular members this gives a free (Stripe-default) 7-day
+    // trial, not the $2.99 *paid* trial from PRICING.trialPrice. Charging
+    // during the trial needs an invoice item on the subscription's first
+    // invoice — deferred until product confirms the $2.99 fee is still
+    // wanted vs. a free trial.
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
@@ -78,11 +95,13 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           quantity: 1,
         },
       ],
-      subscription_data: {
-        trial_period_days: PRICING.trialDays,
-        trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
-        metadata: { supabase_user_id: userId, mode: data.mode },
-      },
+      subscription_data: isWali
+        ? { metadata: { supabase_user_id: userId, mode: data.mode } }
+        : {
+            trial_period_days: PRICING.trialDays,
+            trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
+            metadata: { supabase_user_id: userId, mode: data.mode },
+          },
       payment_method_collection: "if_required",
       success_url: `${getAppOrigin()}/modes?checkout=success`,
       cancel_url: `${getAppOrigin()}/modes?checkout=cancelled`,

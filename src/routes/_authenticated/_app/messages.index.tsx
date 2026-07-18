@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, Users as UsersIcon, ShieldCheck, Plus } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
+import { useAuth } from "@/lib/auth";
 import { useThreads, type ThreadSummary } from "@/lib/queries/threads";
 import { useCreateGroup } from "@/lib/queries/groups";
 import { EmptyState } from "@/components/empty-state";
@@ -22,6 +23,7 @@ function threadTitle(t: ThreadSummary): string {
 
 function MessagesPage() {
   const { active } = useActiveMode();
+  const { isWali } = useAuth();
   const [q, setQ] = useState("");
   const { data: threads, isLoading } = useThreads(active);
 
@@ -41,7 +43,7 @@ function MessagesPage() {
               Chats
             </h2>
           </div>
-          {active !== "matrimonial" && <CreateGroupSheet mode={active} />}
+          {active !== "matrimonial" && !isWali && <CreateGroupSheet mode={active} />}
         </div>
         <div className="mt-4 flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2.5">
           <Search className="h-4 w-4 text-muted-foreground" />

@@ -14,6 +14,7 @@ import { Route as ChildSafetyRouteImport } from './routes/child-safety'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WaliInviteTokenRouteImport } from './routes/wali-invite.$token'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe-webhook'
 import { Route as ApiStripeIdentityWebhookRouteImport } from './routes/api/stripe-identity-webhook'
 import { Route as AuthenticatedVerifyRouteImport } from './routes/_authenticated/verify'
@@ -50,6 +51,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WaliInviteTokenRoute = WaliInviteTokenRouteImport.update({
+  id: '/wali-invite/$token',
+  path: '/wali-invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/verify': typeof AuthenticatedVerifyRoute
   '/api/stripe-identity-webhook': typeof ApiStripeIdentityWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/wali-invite/$token': typeof WaliInviteTokenRoute
   '/discover': typeof AuthenticatedAppDiscoverRoute
   '/feed': typeof AuthenticatedAppFeedRoute
   '/modes': typeof AuthenticatedAppModesRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/verify': typeof AuthenticatedVerifyRoute
   '/api/stripe-identity-webhook': typeof ApiStripeIdentityWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/wali-invite/$token': typeof WaliInviteTokenRoute
   '/discover': typeof AuthenticatedAppDiscoverRoute
   '/feed': typeof AuthenticatedAppFeedRoute
   '/modes': typeof AuthenticatedAppModesRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/verify': typeof AuthenticatedVerifyRoute
   '/api/stripe-identity-webhook': typeof ApiStripeIdentityWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/wali-invite/$token': typeof WaliInviteTokenRoute
   '/_authenticated/_app/discover': typeof AuthenticatedAppDiscoverRoute
   '/_authenticated/_app/feed': typeof AuthenticatedAppFeedRoute
   '/_authenticated/_app/modes': typeof AuthenticatedAppModesRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/api/stripe-identity-webhook'
     | '/api/stripe-webhook'
+    | '/wali-invite/$token'
     | '/discover'
     | '/feed'
     | '/modes'
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/api/stripe-identity-webhook'
     | '/api/stripe-webhook'
+    | '/wali-invite/$token'
     | '/discover'
     | '/feed'
     | '/modes'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/verify'
     | '/api/stripe-identity-webhook'
     | '/api/stripe-webhook'
+    | '/wali-invite/$token'
     | '/_authenticated/_app/discover'
     | '/_authenticated/_app/feed'
     | '/_authenticated/_app/modes'
@@ -246,6 +258,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ApiStripeIdentityWebhookRoute: typeof ApiStripeIdentityWebhookRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  WaliInviteTokenRoute: typeof WaliInviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -283,6 +296,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wali-invite/$token': {
+      id: '/wali-invite/$token'
+      path: '/wali-invite/$token'
+      fullPath: '/wali-invite/$token'
+      preLoaderRoute: typeof WaliInviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/stripe-webhook': {
@@ -427,6 +447,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ApiStripeIdentityWebhookRoute: ApiStripeIdentityWebhookRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  WaliInviteTokenRoute: WaliInviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -23,6 +23,7 @@ type AuthContextValue = {
   profile: Profile | null;
   entitlements: Entitlement[];
   isAdmin: boolean;
+  isWali: boolean;
   loading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -36,10 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [entitlements, setEntitlements] = useState<Entitlement[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isWali, setIsWali] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadUserData = async (uid: string) => {
-    const [{ data: prof }, { data: ents }, { data: role }] = await Promise.all([
+    const [{ data: prof }, { data: ents }, { data: roles }] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, display_name, verified_gender, is_verified, primary_mode")
@@ -49,16 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("mode_entitlements")
         .select("mode, is_active, is_trial, current_period_end")
         .eq("user_id", uid),
-      supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", uid)
-        .eq("role", "admin")
-        .maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
     setProfile((prof as Profile) ?? null);
     setEntitlements((ents as Entitlement[]) ?? []);
-    setIsAdmin(!!role);
+    const roleSet = new Set((roles ?? []).map((r) => r.role));
+    setIsAdmin(roleSet.has("admin"));
+    setIsWali(roleSet.has("wali"));
   };
 
   useEffect(() => {
@@ -75,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         setEntitlements([]);
         setIsAdmin(false);
+        setIsWali(false);
       }
     });
 
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, entitlements, isAdmin, loading, refresh, signOut }}
+      value={{ user, session, profile, entitlements, isAdmin, isWali, loading, refresh, signOut }}
     >
       {children}
     </AuthContext.Provider>

@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useThreads } from "@/lib/queries/threads";
 import { useMessages, useSendMessage } from "@/lib/queries/messages";
-import { useAddWali } from "@/lib/queries/wali";
+import { useCreateWaliInvite } from "@/lib/queries/wali";
 import { useConnections, useInviteToGroup, useToggleGroupCrossGender } from "@/lib/queries/groups";
 import { useMessagesSubscription } from "@/lib/realtime/use-messages-subscription";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -42,23 +42,25 @@ function ThreadPage() {
 
   const { data: messages } = useMessages(id);
   const sendMessage = useSendMessage(id);
-  const addWali = useAddWali(id);
   useMessagesSubscription(id);
-  const [waliEmail, setWaliEmail] = useState("");
-  const [showWaliInput, setShowWaliInput] = useState(false);
+  const createWaliInvite = useCreateWaliInvite();
+  const [waliInviteLink, setWaliInviteLink] = useState<string | null>(null);
 
   const toggleCrossGender = useToggleGroupCrossGender(thread?.mode ?? "sisterhood");
 
-  const submitWali = async () => {
-    const trimmed = waliEmail.trim();
-    if (!trimmed) return;
+  const inviteWali = async () => {
     try {
-      await addWali.mutateAsync(trimmed);
-      toast.success("Wali added to conversation");
-      setShowWaliInput(false);
-      setWaliEmail("");
+      const token = await createWaliInvite.mutateAsync(id);
+      const link = `${window.location.origin}/wali-invite/${token}`;
+      setWaliInviteLink(link);
+      if (navigator.share) {
+        await navigator.share({ title: "Join as a Wali on Ummah", url: link });
+      } else {
+        await navigator.clipboard.writeText(link);
+        toast.success("Invite link copied.");
+      }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't add wali.");
+      toast.error(err instanceof Error ? err.message : "Couldn't create that invite.");
     }
   };
 
@@ -82,7 +84,6 @@ function ThreadPage() {
     );
   }
 
-  const isMatri = thread.mode === "matrimonial";
   const isGroup = thread.kind === "group";
   const isCommunity = thread.kind === "community";
   const headerTitle =
@@ -145,43 +146,28 @@ function ThreadPage() {
         </div>
       )}
 
-      {isMatri && !isGroup && !isCommunity && (
-        <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-2xl border border-accent/40 bg-[var(--gradient-card)] p-3.5 text-xs text-foreground shadow-[var(--shadow-soft)]">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--mode-brotherhood)]" />
-          <div className="flex-1">
-            <p className="font-medium">
-              Wali-friendly chat. Add your wali to this conversation — they need an existing Ummah
-              account.
-            </p>
-            {showWaliInput ? (
-              <div className="mt-2 flex items-center gap-1.5">
-                <input
-                  value={waliEmail}
-                  onChange={(e) => setWaliEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && submitWali()}
-                  placeholder="Wali's email"
-                  type="email"
-                  className="min-w-0 flex-1 rounded-full border border-border bg-background px-3 py-1 text-[11px] outline-none placeholder:text-muted-foreground"
-                />
-                <button
-                  onClick={submitWali}
-                  disabled={addWali.isPending}
-                  className="shrink-0 rounded-full bg-foreground px-3 py-1 text-[11px] font-medium text-background disabled:opacity-50"
-                >
-                  {addWali.isPending ? "Adding…" : "Add"}
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowWaliInput(true)}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1 text-[11px] font-medium text-background hover:opacity-90"
-              >
-                <UserPlus className="h-3 w-3" /> Add Wali to conversation
-              </button>
-            )}
-          </div>
+      <div className="mx-4 mt-3 flex items-start gap-2.5 rounded-2xl border border-accent/40 bg-[var(--gradient-card)] p-3.5 text-xs text-foreground shadow-[var(--shadow-soft)]">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--mode-brotherhood)]" />
+        <div className="flex-1">
+          <p className="font-medium">
+            Invite a wali (family guardian) into this conversation. They'll get a link to sign up
+            or join — no existing account needed.
+          </p>
+          {waliInviteLink && (
+            <div className="mt-2 truncate rounded-full border border-border bg-background px-3 py-1 text-[11px] text-muted-foreground">
+              {waliInviteLink}
+            </div>
+          )}
+          <button
+            onClick={inviteWali}
+            disabled={createWaliInvite.isPending}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1 text-[11px] font-medium text-background hover:opacity-90 disabled:opacity-50"
+          >
+            <UserPlus className="h-3 w-3" />
+            {createWaliInvite.isPending ? "Creating…" : "Invite a Wali"}
+          </button>
         </div>
-      )}
+      </div>
 
       <div className="flex-1 space-y-2.5 overflow-y-auto px-4 py-5">
         {messages?.map((m) => {

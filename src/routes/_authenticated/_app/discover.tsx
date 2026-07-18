@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { X, Heart, Star, BadgeCheck, MapPin, Eye, EyeOff } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
+import { useAuth } from "@/lib/auth";
 import { useDiscoverDeck, type DiscoverPerson } from "@/lib/queries/discover";
 import { useStartDmThread } from "@/lib/queries/threads";
 import { MODES } from "@/lib/modes";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/_app/discover")({
 
 function DiscoverPage() {
   const { active } = useActiveMode();
+  const { isWali } = useAuth();
   const { data: deck, isLoading } = useDiscoverDeck(active);
   const startThread = useStartDmThread();
   const [index, setIndex] = useState(0);
@@ -39,6 +41,17 @@ function DiscoverPage() {
   };
 
   const meta = MODES[active];
+
+  if (isWali) {
+    return (
+      <div className="px-5 pt-6">
+        <EmptyState
+          title="Not available for Wali accounts"
+          description="Wali accounts can view and comment on posts, and take part in the conversation they were invited to — but can't start new connections."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="px-5 pt-6">

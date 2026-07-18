@@ -19,14 +19,20 @@ const ICONS: Record<AppMode, React.ReactNode> = {
 };
 
 function ModesPage() {
-  const { profile, entitlements, isAdmin, refresh } = useAuth();
+  const { profile, entitlements, isAdmin, isWali, refresh } = useAuth();
   const { active, setActive } = useActiveMode();
   const navigate = useNavigate();
   const [checkoutLoading, setCheckoutLoading] = useState<AppMode | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const visible = useMemo(
-    () => visibleModes(profile?.verified_gender ?? null, profile?.is_verified ?? false, isAdmin),
-    [profile, isAdmin],
+    () =>
+      visibleModes(
+        profile?.verified_gender ?? null,
+        profile?.is_verified ?? false,
+        isAdmin,
+        isWali,
+      ),
+    [profile, isAdmin, isWali],
   );
   const entMap = new Map(entitlements.map((e) => [e.mode, e]));
   const activeCount = entitlements.filter((e) => e.is_active).length;
@@ -87,17 +93,22 @@ function ModesPage() {
         )}
       </div>
       <p className="mt-1 text-sm text-muted-foreground">
-        {activeCount === 0
-          ? `Start your $${PRICING.trialPrice} 7-day trial on any unlocked mode below.`
-          : `${activeCount} active · Add another for +$${PRICING.addOnPrice}/mo.`}
+        {isWali
+          ? `Wali access: 14 days free, then $${PRICING.waliPrice}/mo.`
+          : activeCount === 0
+            ? `Start your $${PRICING.trialPrice} 7-day trial on any unlocked mode below.`
+            : `${activeCount} active · Add another for +$${PRICING.addOnPrice}/mo.`}
       </p>
 
       <div className="mt-5 space-y-3">
         {(Object.keys(MODES) as AppMode[]).map((m) => {
           const meta = MODES[m];
-          const isVisible = visible.includes(m);
           const ent = entMap.get(m);
           const isActive = !!ent?.is_active;
+          // A wali's own invited mode is never in visibleModes() (they get no
+          // free gender-based access), but they should still see it unlocked
+          // once redeem_wali_invite() has granted them an active entitlement.
+          const isVisible = visible.includes(m) || isActive;
           const isCurrent = active === m;
 
           if (!isVisible) {
@@ -179,12 +190,14 @@ function ModesPage() {
                             <Sparkles className="h-3.5 w-3.5" />
                             {checkoutLoading === m
                               ? "Redirecting…"
-                              : activeCount === 0
-                                ? `Start trial · $${PRICING.trialPrice}`
-                                : `Add for $${PRICING.addOnPrice}/mo`}
+                              : isWali
+                                ? "Subscribe"
+                                : activeCount === 0
+                                  ? `Start trial · $${PRICING.trialPrice}`
+                                  : `Add for $${PRICING.addOnPrice}/mo`}
                           </button>
                           <span className="text-[11px] text-muted-foreground">
-                            then ${PRICING.basePrice}/mo
+                            then ${isWali ? PRICING.waliPrice : PRICING.basePrice}/mo
                           </span>
                         </>
                       )}

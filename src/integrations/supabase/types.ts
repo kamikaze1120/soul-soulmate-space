@@ -559,6 +559,75 @@ export type Database = {
         }
         Relationships: []
       }
+      wali_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          inviter_id: string
+          redeemed_at: string | null
+          redeemed_by: string | null
+          thread_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          inviter_id: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          thread_id: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          inviter_id?: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          thread_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wali_invites_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wali_invites_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wali_invites_redeemed_by_fkey"
+            columns: ["redeemed_by"]
+            isOneToOne: false
+            referencedRelation: "discoverable_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wali_invites_redeemed_by_fkey"
+            columns: ["redeemed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wali_invites_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       discoverable_profiles: {
@@ -644,6 +713,7 @@ export type Database = {
         }
         Returns: string
       }
+      create_wali_invite: { Args: { _thread_id: string }; Returns: string }
       get_connections: {
         Args: { _mode: Database["public"]["Enums"]["app_mode"] }
         Returns: {
@@ -670,6 +740,15 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_wali_invite_info: {
+        Args: { _token: string }
+        Returns: {
+          expired: boolean
+          inviter_name: string
+          mode: Database["public"]["Enums"]["app_mode"]
+          redeemed: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -685,6 +764,7 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      redeem_wali_invite: { Args: { _token: string }; Returns: string }
       send_message: {
         Args: { _body: string; _thread_id: string }
         Returns: {
@@ -716,7 +796,7 @@ export type Database = {
     }
     Enums: {
       app_mode: "matrimonial" | "sisterhood" | "brotherhood"
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "wali"
       gender: "male" | "female"
       marital_status: "single" | "divorced" | "separated" | "widowed"
     }
@@ -847,7 +927,7 @@ export const Constants = {
   public: {
     Enums: {
       app_mode: ["matrimonial", "sisterhood", "brotherhood"],
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "wali"],
       gender: ["male", "female"],
       marital_status: ["single", "divorced", "separated", "widowed"],
     },
