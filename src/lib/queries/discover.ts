@@ -2,49 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { getSignedUrls } from "@/lib/storage";
-import { queryKeys } from "@/lib/queries/keys";
+import { searchCity, reverseGeocode, type GeocodeResult } from "@/lib/geocode.server";
 import type { AppMode } from "@/lib/modes";
-import type { Tables } from "@/integrations/supabase/types";
-
-export type DiscoverPerson = Tables<"discoverable_profiles"> & {
-  avatarUrl: string | null;
-  coverUrl: string | null;
-};
-
-// discoverable_profiles' RLS already only returns rows the viewer shares
-// SOME visible mode with; this narrows to people eligible for THIS mode
-// specifically (mirrors the can_view_mode() rule for the target row).
-export function useDiscoverDeck(mode: AppMode) {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: queryKeys.discover(mode),
-    queryFn: async (): Promise<DiscoverPerson[]> => {
-      let query = supabase.from("discoverable_profiles").select("*").neq("id", user!.id).limit(30);
-      if (mode === "matrimonial") query = query.eq("is_verified", true);
-      if (mode === "sisterhood") query = query.eq("verified_gender", "female");
-      if (mode === "brotherhood") query = query.eq("verified_gender", "male");
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      const avatarUrls = await getSignedUrls(
-        "profile-photos",
-        (data ?? []).map((p) => p.avatar_path).filter((p): p is string => !!p),
-      );
-      const coverUrls = await getSignedUrls(
-        "profile-photos",
-        (data ?? []).map((p) => p.cover_path).filter((p): p is string => !!p),
-      );
-
-      return (data ?? []).map((p) => ({
-        ...p,
-        avatarUrl: p.avatar_path ? (avatarUrls[p.avatar_path] ?? null) : null,
-        coverUrl: p.cover_path ? (coverUrls[p.cover_path] ?? null) : null,
-      }));
-    },
-    enabled: !!user,
-  });
-}
 
 export type NearbyPerson = {
   id: string;
@@ -53,50 +12,119 @@ export type NearbyPerson = {
   city: string | null;
   country: string | null;
   is_verified: boolean | null;
+  verified_gender: "male" | "female" | null;
+  kids_age_groups: string[] | null;
   distance_miles: number;
   connection_status: "none" | "pending" | "accepted" | "declined";
   avatarUrl: string | null;
+  coverUrl: string | null;
 };
 
-export function useNearbyProfiles(mode: AppMode, coords: { lat: number; lng: number } | null) {
+export const MIN_RADIUS_MILES = 5;
+export const MAX_RADIUS_MILES = 250;
+
+export function useNearbyProfiles(
+  mode: AppMode,
+  coords: { lat: number; lng: number } | null,
+  radiusMiles: number,
+) {
   return useQuery({
-    queryKey: ["nearby", mode, coords?.lat, coords?.lng] as const,
+    queryKey: ["nearby", mode, coords?.lat, coords?.lng, radiusMiles] as const,
     enabled: !!coords,
     queryFn: async (): Promise<NearbyPerson[]> => {
       const { data, error } = await supabase.rpc("get_nearby_profiles", {
         _mode: mode,
         _lat: coords!.lat,
         _lng: coords!.lng,
+        _radius_miles: radiusMiles,
       });
       if (error) throw error;
 
-      const avatarUrls = await getSignedUrls(
-        "profile-photos",
-        (data ?? []).map((p) => p.avatar_path).filter((p): p is string => !!p),
-      );
+      const [avatarUrls, coverUrls] = await Promise.all([
+        getSignedUrls(
+          "profile-photos",
+          (data ?? []).map((p) => p.avatar_path).filter((p): p is string => !!p),
+        ),
+        getSignedUrls(
+          "profile-photos",
+          (data ?? []).map((p) => p.cover_path).filter((p): p is string => !!p),
+        ),
+      ]);
 
       return (data ?? []).map((p) => ({
         ...p,
         connection_status: (p.connection_status ?? "none") as NearbyPerson["connection_status"],
         avatarUrl: p.avatar_path ? (avatarUrls[p.avatar_path] ?? null) : null,
+        coverUrl: p.cover_path ? (coverUrls[p.cover_path] ?? null) : null,
       }));
     },
   });
 }
 
-export function useSaveMyLocation() {
+export function useMyLocation() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["my-location", user?.id] as const,
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("latitude, longitude, city, country")
+        .eq("id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+function useSaveLocation() {
   const { user, refresh } = useAuth();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (coords: { lat: number; lng: number }) => {
+    mutationFn: async (result: GeocodeResult) => {
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase
         .from("profiles")
-        .update({ latitude: coords.lat, longitude: coords.lng })
+        .update({
+          latitude: result.lat,
+          longitude: result.lng,
+          city: result.city,
+          country: result.country,
+        })
         .eq("id", user.id);
       if (error) throw error;
     },
-    onSuccess: () => refresh(),
+    onSuccess: () => {
+      refresh();
+      queryClient.invalidateQueries({ queryKey: ["my-location"] });
+    },
   });
+}
+
+// GPS: browser gives raw coords, server reverse-geocodes to a city/country
+// label, then both get saved to the profile together.
+export function useSetLocationFromGPS() {
+  const saveLocation = useSaveLocation();
+  return useMutation({
+    mutationFn: async (coords: { lat: number; lng: number }) => {
+      const result = await reverseGeocode({ data: coords });
+      await saveLocation.mutateAsync(result);
+      return result;
+    },
+  });
+}
+
+export function useSearchCity() {
+  return useMutation({
+    mutationFn: async (query: string) => {
+      return searchCity({ data: { query } });
+    },
+  });
+}
+
+export function useSetLocationFromResult() {
+  return useSaveLocation();
 }
 
 export function useSendConnectionRequest(mode: AppMode) {

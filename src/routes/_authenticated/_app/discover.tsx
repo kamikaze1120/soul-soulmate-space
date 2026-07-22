@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   X,
@@ -12,7 +12,6 @@ import {
   UserPlus,
   Check,
   Clock,
-  LocateFixed,
   UserX,
   PartyPopper,
   MapPinOff,
@@ -20,18 +19,21 @@ import {
 } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
 import { useAuth } from "@/lib/auth";
-import { useDiscoverDeck, type DiscoverPerson } from "@/lib/queries/discover";
+import { useStartDmThread } from "@/lib/queries/threads";
 import {
   useNearbyProfiles,
-  useSaveMyLocation,
+  useMyLocation,
   useSendConnectionRequest,
   useIncomingConnectionRequests,
   useRespondToConnectionRequest,
+  MIN_RADIUS_MILES,
+  MAX_RADIUS_MILES,
   type NearbyPerson,
 } from "@/lib/queries/discover";
-import { useStartDmThread } from "@/lib/queries/threads";
-import { MODES } from "@/lib/modes";
+import { MODES, type AppMode } from "@/lib/modes";
 import { EmptyState } from "@/components/empty-state";
+import { LocationPicker } from "@/components/location-picker";
+import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/discover")({
@@ -58,10 +60,42 @@ function DiscoverPage() {
   return active === "matrimonial" ? <SwipeDeck /> : <NearbyList />;
 }
 
-// ── Nikah: original swipe deck ──────────────────────────────────────────
+function useRadiusState() {
+  const [radius, setRadius] = useState(50);
+  return { radius, setRadius };
+}
+
+function RadiusControl({ radius, onChange }: { radius: number; onChange: (v: number) => void }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium text-foreground">Search radius</span>
+        <span className="text-muted-foreground">{radius} mi</span>
+      </div>
+      <Slider
+        className="mt-3"
+        min={MIN_RADIUS_MILES}
+        max={MAX_RADIUS_MILES}
+        step={5}
+        value={[radius]}
+        onValueChange={([v]) => onChange(v)}
+      />
+    </div>
+  );
+}
+
+// ── Nikah: swipe deck, now driven by location + radius ──────────────────
 function SwipeDeck() {
   const { active } = useActiveMode();
-  const { data: deck, isLoading } = useDiscoverDeck(active);
+  const meta = MODES[active];
+  const { data: location } = useMyLocation();
+  const { radius, setRadius } = useRadiusState();
+  const [showSettings, setShowSettings] = useState(false);
+  const coords =
+    location?.latitude && location?.longitude
+      ? { lat: location.latitude, lng: location.longitude }
+      : null;
+  const { data: deck, isLoading } = useNearbyProfiles("matrimonial", coords, radius);
   const startThread = useStartDmThread();
   const [index, setIndex] = useState(0);
   const [blur, setBlur] = useState(true);
@@ -69,7 +103,7 @@ function SwipeDeck() {
   const current = deck?.[index];
   const next = deck?.[index + 1];
 
-  const advance = async (label: string, person?: DiscoverPerson) => {
+  const advance = async (label: string, person?: NearbyPerson) => {
     if (!person?.id) return;
     if (label === "Liked") {
       try {
@@ -84,8 +118,6 @@ function SwipeDeck() {
     setIndex((i) => i + 1);
   };
 
-  const meta = MODES[active];
-
   return (
     <div className="px-5 pt-6">
       <div className="mb-5 flex items-end justify-between">
@@ -95,46 +127,75 @@ function SwipeDeck() {
             {meta.title}
           </h2>
         </div>
-        <button
-          onClick={() => setBlur((b) => !b)}
-          className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium shadow-[var(--shadow-soft)]"
-        >
-          {blur ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          {blur ? "Modesty on" : "Modesty off"}
-        </button>
-      </div>
-
-      <div className="relative mx-auto h-[540px] w-full max-w-sm">
-        {!isLoading && !current && (
-          <div className="grid h-full place-items-center rounded-[var(--radius-2xl)] border border-dashed border-border bg-card">
-            <EmptyState
-              icon={PartyPopper}
-              title="You're all caught up."
-              description={`Come back later — new ${meta.title.toLowerCase()} profiles every day.`}
-            />
-          </div>
-        )}
-        {next && <Card person={next} blur={blur} stacked />}
-        {current && <Card person={current} blur={blur} />}
-      </div>
-
-      {current && (
-        <div className="mt-7 flex items-center justify-center gap-5">
-          <ActionBtn onClick={() => advance("Passed on", current)} label="Pass" tone="muted">
-            <X className="h-7 w-7" />
-          </ActionBtn>
-          <ActionBtn
-            onClick={() => advance("Super-liked", current)}
-            label="Super"
-            tone="gold"
-            small
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowSettings((s) => !s)}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium shadow-[var(--shadow-soft)]"
           >
-            <Star className="h-5 w-5" />
-          </ActionBtn>
-          <ActionBtn onClick={() => advance("Liked", current)} label="Like" tone="primary">
-            <Heart className="h-7 w-7 fill-current" />
-          </ActionBtn>
+            <MapPin className="h-3.5 w-3.5" /> {radius} mi
+          </button>
+          <button
+            onClick={() => setBlur((b) => !b)}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium shadow-[var(--shadow-soft)]"
+          >
+            {blur ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            {blur ? "Modesty on" : "Modesty off"}
+          </button>
         </div>
+      </div>
+
+      {showSettings && (
+        <div className="mb-5 space-y-3">
+          <LocationPicker />
+          <RadiusControl radius={radius} onChange={setRadius} />
+        </div>
+      )}
+
+      {!coords ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-center">
+          <MapPinOff className="mx-auto h-8 w-8 text-muted-foreground" />
+          <p className="mt-3 text-sm text-muted-foreground">
+            Set your location to see Nikah matches near you.
+          </p>
+          <div className="mt-4">
+            <LocationPicker compact />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="relative mx-auto h-[540px] w-full max-w-sm">
+            {!isLoading && !current && (
+              <div className="grid h-full place-items-center rounded-[var(--radius-2xl)] border border-dashed border-border bg-card">
+                <EmptyState
+                  icon={PartyPopper}
+                  title="You're all caught up."
+                  description={`No more matches within ${radius} mi — try widening your search radius.`}
+                />
+              </div>
+            )}
+            {next && <Card person={next} blur={blur} stacked />}
+            {current && <Card person={current} blur={blur} />}
+          </div>
+
+          {current && (
+            <div className="mt-7 flex items-center justify-center gap-5">
+              <ActionBtn onClick={() => advance("Passed on", current)} label="Pass" tone="muted">
+                <X className="h-7 w-7" />
+              </ActionBtn>
+              <ActionBtn
+                onClick={() => advance("Super-liked", current)}
+                label="Super"
+                tone="gold"
+                small
+              >
+                <Star className="h-5 w-5" />
+              </ActionBtn>
+              <ActionBtn onClick={() => advance("Liked", current)} label="Like" tone="primary">
+                <Heart className="h-7 w-7 fill-current" />
+              </ActionBtn>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -145,7 +206,7 @@ function Card({
   blur,
   stacked,
 }: {
-  person: DiscoverPerson;
+  person: NearbyPerson;
   blur?: boolean;
   stacked?: boolean;
 }) {
@@ -171,25 +232,13 @@ function Card({
           </h3>
           {person.is_verified && <BadgeCheck className="h-5 w-5 text-[var(--accent)]" />}
         </div>
-        {person.city && (
-          <div className="mt-1 flex items-center gap-1.5 text-sm text-white/85">
-            <MapPin className="h-3.5 w-3.5" /> {person.city}
-          </div>
-        )}
+        <div className="mt-1 flex items-center gap-1.5 text-sm text-white/85">
+          <MapPin className="h-3.5 w-3.5" />
+          {person.city ? `${person.city} · ` : ""}
+          {Math.round(person.distance_miles)} mi away
+        </div>
         {person.bio && (
           <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-white/85">{person.bio}</p>
-        )}
-        {person.kids_age_groups && person.kids_age_groups.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {person.kids_age_groups.map((g) => (
-              <span
-                key={g}
-                className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] backdrop-blur"
-              >
-                kids {g}
-              </span>
-            ))}
-          </div>
         )}
       </div>
     </div>
@@ -232,35 +281,17 @@ function NearbyList() {
   const { active } = useActiveMode();
   const meta = MODES[active];
   const [tab, setTab] = useState<"nearby" | "requests">("nearby");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [locating, setLocating] = useState(false);
-  const [locationDenied, setLocationDenied] = useState(false);
-  const saveLocation = useSaveMyLocation();
-  const { data: nearby, isLoading } = useNearbyProfiles(active, coords);
+  const [showSettings, setShowSettings] = useState(false);
+  const { data: location } = useMyLocation();
+  const { radius, setRadius } = useRadiusState();
+  const coords =
+    location?.latitude && location?.longitude
+      ? { lat: location.latitude, lng: location.longitude }
+      : null;
+  const { data: nearby, isLoading } = useNearbyProfiles(active as AppMode, coords, radius);
   const sendRequest = useSendConnectionRequest(active);
   const { data: incoming } = useIncomingConnectionRequests();
   const respond = useRespondToConnectionRequest();
-
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error("Location isn't available on this device.");
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setCoords(c);
-        saveLocation.mutate(c);
-        setLocating(false);
-      },
-      () => {
-        setLocationDenied(true);
-        setLocating(false);
-      },
-      { enableHighAccuracy: false, timeout: 10000 },
-    );
-  };
 
   const connect = async (personId: string) => {
     try {
@@ -282,11 +313,21 @@ function NearbyList() {
 
   return (
     <div className="px-5 pt-6">
-      <div className="mb-4">
-        <p className="eyebrow text-muted-foreground">Discover · {meta.tagline}</p>
-        <h2 className="font-display mt-1 text-3xl font-medium tracking-tight text-foreground">
-          {meta.title}
-        </h2>
+      <div className="mb-4 flex items-end justify-between">
+        <div>
+          <p className="eyebrow text-muted-foreground">Discover · {meta.tagline}</p>
+          <h2 className="font-display mt-1 text-3xl font-medium tracking-tight text-foreground">
+            {meta.title}
+          </h2>
+        </div>
+        {coords && (
+          <button
+            onClick={() => setShowSettings((s) => !s)}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium shadow-[var(--shadow-soft)]"
+          >
+            <MapPin className="h-3.5 w-3.5" /> {radius} mi
+          </button>
+        )}
       </div>
 
       <div className="mb-4 flex gap-2">
@@ -319,24 +360,10 @@ function NearbyList() {
 
       {tab === "nearby" && (
         <>
-          {!coords && (
-            <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-center">
-              <LocateFixed className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                Share your location to see {meta.title.toLowerCase()} members near you.
-              </p>
-              <button
-                onClick={requestLocation}
-                disabled={locating}
-                className="mt-4 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-50"
-              >
-                {locating ? "Locating…" : "Enable location"}
-              </button>
-              {locationDenied && (
-                <p className="mt-2 text-[11px] text-destructive">
-                  Location permission was denied — check your browser/device settings.
-                </p>
-              )}
+          {(showSettings || !coords) && (
+            <div className="mb-4 space-y-3">
+              <LocationPicker />
+              {coords && <RadiusControl radius={radius} onChange={setRadius} />}
             </div>
           )}
 
@@ -346,7 +373,7 @@ function NearbyList() {
                 <EmptyState
                   icon={MapPinOff}
                   title="No one nearby yet"
-                  description={`No verified ${meta.title.toLowerCase()} members found near you.`}
+                  description={`No verified ${meta.title.toLowerCase()} members found within ${radius} mi.`}
                 />
               )}
               {nearby?.map((p, i) => (

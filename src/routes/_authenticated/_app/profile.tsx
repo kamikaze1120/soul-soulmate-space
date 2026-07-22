@@ -14,6 +14,7 @@ import { useActiveMode } from "@/lib/active-mode";
 import { useFeedPosts } from "@/lib/queries/feed";
 import { useThreads } from "@/lib/queries/threads";
 import { MODES } from "@/lib/modes";
+import { LocationPicker } from "@/components/location-picker";
 
 export const Route = createFileRoute("/_authenticated/_app/profile")({
   head: () => ({ meta: [{ title: "Profile · Ummah" }] }),
@@ -84,6 +85,10 @@ function ProfilePage() {
         <button className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[var(--gradient-gold)] px-3 py-2.5 text-sm font-semibold text-accent-foreground shadow-[var(--shadow-gold)]">
           <Sparkles className="h-4 w-4" /> Boost profile
         </button>
+      </div>
+
+      <div className="mt-4">
+        <LocationPicker />
       </div>
 
       {!profile?.is_verified && (
