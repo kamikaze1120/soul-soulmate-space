@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import {
   Settings,
   BadgeCheck,
@@ -28,7 +29,12 @@ function ProfilePage() {
   const grid = (posts ?? []).filter((p) => p.author_id === user?.id);
 
   return (
-    <div className="px-5 pt-6">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="px-5 pt-6"
+    >
       <p className="eyebrow text-muted-foreground">Profile</p>
       <h2 className="font-display mt-1 text-3xl font-medium tracking-tight text-foreground">
         {profile?.display_name ?? "You"}
@@ -89,7 +95,9 @@ function ProfilePage() {
             <p className="font-display text-lg font-medium tracking-tight text-foreground">
               Verify your identity
             </p>
-            <p className="text-xs text-muted-foreground">Government ID check — unlocks Nikah.</p>
+            <p className="text-xs text-muted-foreground">
+              Government ID check — required before anything unlocks.
+            </p>
           </div>
           <Link
             to="/verify"
@@ -120,7 +128,7 @@ function ProfilePage() {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

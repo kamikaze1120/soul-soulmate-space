@@ -1,6 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Users, ShieldCheck, Lock, Sparkles, Check, CreditCard } from "lucide-react";
+import {
+  Heart,
+  Users,
+  ShieldCheck,
+  Lock,
+  Sparkles,
+  Check,
+  CreditCard,
+  UserX,
+  BadgeCheck,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { MODES, PRICING, eligibleModes, type AppMode } from "@/lib/modes";
 import { useActiveMode } from "@/lib/active-mode";
@@ -82,6 +92,7 @@ function ModesPage() {
     return (
       <div className="px-4 pt-5">
         <EmptyState
+          icon={UserX}
           title="Not applicable for Wali accounts"
           description="Wali accounts are free and only take part in the conversation(s) they were invited to — there's nothing to subscribe to here."
         />
@@ -93,6 +104,7 @@ function ModesPage() {
     return (
       <div className="px-4 pt-5">
         <EmptyState
+          icon={BadgeCheck}
           title="Verify your identity first"
           description="Modes unlock once your ID is verified."
         />

@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoMark } from "@/components/logo-mark";
+import heroPattern from "@/assets/hero-pattern.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,9 +99,17 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--app-canvas)]">
+    <div className="relative min-h-screen overflow-hidden bg-[var(--app-canvas)]">
+      <img
+        src={heroPattern}
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] w-full object-cover opacity-[0.1]"
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(70%_60%_at_50%_0%,transparent_0%,var(--app-canvas)_80%)]" />
+
       {/* Editorial header */}
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+      <div className="relative mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <Link
           to="/"
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
@@ -114,26 +124,36 @@ function AuthPage() {
         </Link>
       </div>
 
-      <div className="mx-auto grid max-w-5xl gap-10 px-6 pb-20 pt-8 md:grid-cols-2 md:items-center">
+      <div className="relative mx-auto grid max-w-5xl gap-10 px-6 pb-20 pt-8 md:grid-cols-2 md:items-center">
         {/* Left: editorial copy */}
-        <div className="hidden md:block">
+        <motion.div
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="hidden md:block"
+        >
           <p className="eyebrow text-muted-foreground">Members only</p>
           <h1 className="font-display mt-3 text-5xl font-medium leading-[1.05] tracking-tight text-foreground">
             Step inside a <span className="italic text-[var(--mode-matrimonial)]">verified</span>{" "}
             circle.
           </h1>
           <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
-            Every member is checked against a government ID and a 3-second liveness video before
-            they can be discovered. Modesty-first by design.
+            Every member is checked against a government ID and a selfie match before they can be
+            discovered. Modesty-first by design.
           </p>
           <div className="mt-8 flex items-center gap-3 text-xs text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-[var(--mode-brotherhood)]" />
             Your credentials are encrypted in transit and at rest.
           </div>
-        </div>
+        </motion.div>
 
         {/* Right: form card */}
-        <div className="rounded-[var(--radius-2xl)] border border-border bg-card p-7 shadow-[var(--shadow-elevated)] md:p-9">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+          className="rounded-[var(--radius-2xl)] border border-border bg-card p-7 shadow-[var(--shadow-elevated)] md:p-9"
+        >
           <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted p-1">
               <TabsTrigger value="signin" className="rounded-full">
@@ -223,7 +243,7 @@ function AuthPage() {
                     </Label>
                   </RadioGroup>
                   <p className="text-[11px] text-muted-foreground">
-                    Confirmed by ID + liveness check before unlocking gender-locked modes.
+                    Confirmed by ID + selfie check — required before anything unlocks.
                   </p>
                 </div>
                 <Button
@@ -236,7 +256,7 @@ function AuthPage() {
               </form>
             </TabsContent>
           </Tabs>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, Users as UsersIcon, ShieldCheck, Plus } from "lucide-react";
+import { motion } from "framer-motion";
+import { Search, Users as UsersIcon, ShieldCheck, Plus, MessageCircleHeart } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
 import { useAuth } from "@/lib/auth";
 import { useThreads, type ThreadSummary } from "@/lib/queries/threads";
@@ -60,13 +61,14 @@ function MessagesPage() {
         {!isLoading && filtered.length === 0 && (
           <li>
             <EmptyState
+              icon={MessageCircleHeart}
               title="No conversations yet"
               description="Like someone in Discover to start a conversation."
             />
           </li>
         )}
-        {filtered.map((t) => (
-          <ThreadRow key={t.id} t={t} />
+        {filtered.map((t, i) => (
+          <ThreadRow key={t.id} t={t} index={i} />
         ))}
       </ul>
     </div>
@@ -122,7 +124,7 @@ function CreateGroupSheet({ mode }: { mode: "sisterhood" | "brotherhood" }) {
   );
 }
 
-function ThreadRow({ t }: { t: ThreadSummary }) {
+function ThreadRow({ t, index }: { t: ThreadSummary; index: number }) {
   const title = threadTitle(t);
   const isMultiMember = t.kind !== "dm";
   const subline = isMultiMember
@@ -130,7 +132,11 @@ function ThreadRow({ t }: { t: ThreadSummary }) {
     : "";
 
   return (
-    <li>
+    <motion.li
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3, delay: Math.min(index, 10) * 0.03 }}
+    >
       <Link
         to="/messages/$id"
         params={{ id: t.id }}
@@ -185,6 +191,6 @@ function ThreadRow({ t }: { t: ThreadSummary }) {
           </div>
         </div>
       </Link>
-    </li>
+    </motion.li>
   );
 }

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import {
   X,
   Heart,
@@ -12,6 +13,10 @@ import {
   Check,
   Clock,
   LocateFixed,
+  UserX,
+  PartyPopper,
+  MapPinOff,
+  Inbox,
 } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
 import { useAuth } from "@/lib/auth";
@@ -42,6 +47,7 @@ function DiscoverPage() {
     return (
       <div className="px-5 pt-6">
         <EmptyState
+          icon={UserX}
           title="Not available for Wali accounts"
           description="Wali accounts can view and comment on posts, and take part in the conversation they were invited to — but can't start new connections."
         />
@@ -102,6 +108,7 @@ function SwipeDeck() {
         {!isLoading && !current && (
           <div className="grid h-full place-items-center rounded-[var(--radius-2xl)] border border-dashed border-border bg-card">
             <EmptyState
+              icon={PartyPopper}
               title="You're all caught up."
               description={`Come back later — new ${meta.title.toLowerCase()} profiles every day.`}
             />
@@ -286,7 +293,9 @@ function NearbyList() {
         <button
           onClick={() => setTab("nearby")}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            tab === "nearby" ? "bg-foreground text-background" : "border border-border text-muted-foreground"
+            tab === "nearby"
+              ? "bg-foreground text-background"
+              : "border border-border text-muted-foreground"
           }`}
         >
           Nearby
@@ -294,7 +303,9 @@ function NearbyList() {
         <button
           onClick={() => setTab("requests")}
           className={`relative rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            tab === "requests" ? "bg-foreground text-background" : "border border-border text-muted-foreground"
+            tab === "requests"
+              ? "bg-foreground text-background"
+              : "border border-border text-muted-foreground"
           }`}
         >
           Requests
@@ -333,11 +344,14 @@ function NearbyList() {
             <div className="space-y-3">
               {!isLoading && (!nearby || nearby.length === 0) && (
                 <EmptyState
+                  icon={MapPinOff}
                   title="No one nearby yet"
                   description={`No verified ${meta.title.toLowerCase()} members found near you.`}
                 />
               )}
-              {nearby?.map((p) => <NearbyRow key={p.id} person={p} onConnect={() => connect(p.id)} />)}
+              {nearby?.map((p, i) => (
+                <NearbyRow key={p.id} person={p} index={i} onConnect={() => connect(p.id)} />
+              ))}
             </div>
           )}
         </>
@@ -346,7 +360,11 @@ function NearbyList() {
       {tab === "requests" && (
         <div className="space-y-3">
           {!incoming?.length && (
-            <EmptyState title="No pending requests" description="You're all caught up." />
+            <EmptyState
+              icon={Inbox}
+              title="No pending requests"
+              description="You're all caught up."
+            />
           )}
           {incoming?.map((r) => (
             <div
@@ -389,10 +407,23 @@ function NearbyList() {
   );
 }
 
-function NearbyRow({ person, onConnect }: { person: NearbyPerson; onConnect: () => void }) {
+function NearbyRow({
+  person,
+  index,
+  onConnect,
+}: {
+  person: NearbyPerson;
+  index: number;
+  onConnect: () => void;
+}) {
   const status = person.connection_status;
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-[var(--shadow-soft)]">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.04 }}
+      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-[var(--shadow-soft)]"
+    >
       <div className="flex items-center gap-3">
         {person.avatarUrl ? (
           <img src={person.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
@@ -402,7 +433,9 @@ function NearbyRow({ person, onConnect }: { person: NearbyPerson; onConnect: () 
         <div className="leading-tight">
           <div className="flex items-center gap-1 font-display text-base font-medium text-foreground">
             {person.display_name ?? "Someone"}
-            {person.is_verified && <BadgeCheck className="h-3.5 w-3.5 text-[var(--mode-brotherhood)]" />}
+            {person.is_verified && (
+              <BadgeCheck className="h-3.5 w-3.5 text-[var(--mode-brotherhood)]" />
+            )}
           </div>
           <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <MapPin className="h-3 w-3" /> {Math.round(person.distance_miles)} mi away
@@ -425,6 +458,6 @@ function NearbyRow({ person, onConnect }: { person: NearbyPerson; onConnect: () 
           <UserPlus className="h-3.5 w-3.5" /> Connect
         </button>
       )}
-    </div>
+    </motion.div>
   );
 }

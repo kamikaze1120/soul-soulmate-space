@@ -12,6 +12,7 @@ import {
   CalendarDays,
   MapPin,
   Check,
+  Images,
 } from "lucide-react";
 import { useActiveMode } from "@/lib/active-mode";
 import { useFeedPosts, useToggleLike, useVoteOnPoll, type FeedPost } from "@/lib/queries/feed";
@@ -74,6 +75,7 @@ function FeedPage() {
       <div className="space-y-5 py-5">
         {!isLoading && (!posts || posts.length === 0) && (
           <EmptyState
+            icon={Images}
             title="No posts yet"
             description={`Nothing shared in ${meta.title} yet. Check back soon, in shaa Allah.`}
           />

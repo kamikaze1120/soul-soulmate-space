@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Heart, Users, ShieldCheck } from "lucide-react";
 import { useCompleteOnboarding } from "@/lib/queries/profiles";
 import { LogoMark } from "@/components/logo-mark";
@@ -63,9 +64,20 @@ function OnboardingPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6 py-10">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6 py-10"
+    >
       <div className="mb-8 text-center">
-        <LogoMark className="mx-auto h-14 w-14 text-2xl shadow-[var(--shadow-elevated)]" />
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1, type: "spring", stiffness: 200 }}
+        >
+          <LogoMark className="mx-auto h-14 w-14 text-2xl shadow-[var(--shadow-elevated)]" />
+        </motion.div>
         <h1 className="font-display mt-4 text-3xl font-medium tracking-tight text-foreground">
           Welcome to Ummah
         </h1>
@@ -135,6 +147,6 @@ function OnboardingPage() {
       >
         <Heart className="h-4 w-4" /> {complete.isPending ? "Saving…" : "Continue"}
       </button>
-    </div>
+    </motion.div>
   );
 }
