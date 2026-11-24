@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Ummah — verified Muslim community app</title>
+  <desc id="desc">Animated night banner with a golden crescent, a slowly turning eight-point star rosette, three linked rings for the Nikah, Sisterhood and Brotherhood spaces, a verified shield and the Ummah title in gold.</desc>
+  <defs>
+    <linearGradient id="night" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#020317"/>
+      <stop offset=".52" stop-color="#071238"/>
+      <stop offset="1" stop-color="#13052d"/>
+    </linearGradient>
+    <radialGradient id="purpleCloud">
+      <stop stop-color="#d43cff" stop-opacity=".62"/>
+      <stop offset=".34" stop-color="#8d22ff" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#4215a7" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="emeraldCloud">
+      <stop stop-color="#3fe0a8" stop-opacity=".45"/>
+      <stop offset=".35" stop-color="#0f8f68" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#05402f" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="moonGlow">
+      <stop stop-color="#fff7cf"/>
+      <stop offset=".3" stop-color="#ffe08a"/>
+      <stop offset=".7" stop-color="#f0a72f"/>
+      <stop offset="1" stop-color="#a96b18"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#a96b18"/>
+      <stop offset=".28" stop-color="#ffe293"/>
+      <stop offset=".55" stop-color="#f4bb4d"/>
+      <stop offset=".82" stop-color="#fff0b7"/>
+      <stop offset="1" stop-color="#b87519"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffffff" stop-opacity=".14"/>
+      <stop offset=".45" stop-color="#af75ff" stop-opacity=".07"/>
+      <stop offset="1" stop-color="#3fe0a8" stop-opacity=".05"/>
+    </linearGradient>
+    <pattern id="stars" width="150" height="110" patternUnits="userSpaceOnUse">
+      <circle cx="13" cy="18" r="1.2" fill="#fff7d4" opacity=".9"/>
+      <circle cx="61" cy="36" r=".7" fill="#d7b5ff" opacity=".76"/>
+      <circle cx="112" cy="17" r=".9" fill="#fff" opacity=".72"/>
+      <circle cx="140" cy="68" r="1.1" fill="#ffd972" opacity=".8"/>
+      <circle cx="83" cy="91" r=".55" fill="#fff" opacity=".58"/>
+      <circle cx="31" cy="100" r=".75" fill="#8ff0c8" opacity=".72"/>
+    </pattern>
+    <mask id="crescent">
+      <rect x="-80" y="-80" width="160" height="160" fill="#fff"/>
+      <circle cx="26" cy="-14" r="52" fill="#000"/>
+    </mask>
+    <filter id="blur" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="42"/></filter>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dy="18" stdDeviation="20" flood-color="#000017" flood-opacity=".8"/></filter>
+    <clipPath id="clip"><rect width="1200" height="420" rx="34"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <rect width="1200" height="420" fill="url(#night)"/>
+    <ellipse cx="250" cy="120" rx="330" ry="210" fill="url(#purpleCloud)" filter="url(#blur)">
+      <animate attributeName="rx" values="300;370;300" dur="14s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values=".65;1;.65" dur="9s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="960" cy="240" rx="300" ry="200" fill="url(#emeraldCloud)" filter="url(#blur)">
+      <animate attributeName="ry" values="170;230;170" dur="16s" repeatCount="indefinite"/>
+    </ellipse>
+    <rect x="-150" width="1500" height="520" fill="url(#stars)" opacity=".78">
+      <animateTransform attributeName="transform" type="translate" values="0 0;150 0" dur="46s" repeatCount="indefinite"/>
+    </rect>
+
+    <!-- rosette + crescent -->
+    <g transform="translate(930 180)">
+      <g opacity=".55">
+        <animateTransform attributeName="transform" type="rotate" values="0;360" dur="60s" repeatCount="indefinite"/>
+        <rect x="-108" y="-108" width="216" height="216" fill="none" stroke="url(#gold)" stroke-width="1.6"/>
+        <rect x="-108" y="-108" width="216" height="216" fill="none" stroke="url(#gold)" stroke-width="1.6" transform="rotate(45)"/>
+        <circle r="122" fill="none" stroke="#3fe0a8" stroke-opacity=".5" stroke-dasharray="3 10"/>
+      </g>
+      <g opacity=".4">
+        <animateTransform attributeName="transform" type="rotate" values="360;0" dur="80s" repeatCount="indefinite"/>
+        <rect x="-80" y="-80" width="160" height="160" fill="none" stroke="#bc52ff" stroke-width="1"/>
+        <rect x="-80" y="-80" width="160" height="160" fill="none" stroke="#bc52ff" stroke-width="1" transform="rotate(45)"/>
+      </g>
+      <circle r="158" fill="none" stroke="#f7c758" stroke-width="1" stroke-dasharray="2 14" opacity=".45">
+        <animateTransform attributeName="transform" type="rotate" values="0;360" dur="36s" repeatCount="indefinite"/>
+      </circle>
+      <g mask="url(#crescent)" filter="url(#glow)">
+        <circle r="62" fill="url(#moonGlow)"/>
+      </g>
+      <path d="M44 -46l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#fff0b7" filter="url(#glow)">
+        <animate attributeName="opacity" values=".4;1;.4" dur="3s" repeatCount="indefinite"/>
+      </path>
+    </g>
+
+    <!-- three linked rings: Nikah · Sisterhood · Brotherhood -->
+    <g transform="translate(930 362)" font-family="'JetBrains Mono', Consolas, monospace" font-size="10" letter-spacing="1.5" text-anchor="middle">
+      <circle cx="-62" r="22" fill="#1a0f2e" fill-opacity=".8" stroke="#CB55FF" stroke-width="2"/>
+      <circle cx="0" r="22" fill="#2a1520" fill-opacity=".8" stroke="#f0a7a0" stroke-width="2"/>
+      <circle cx="62" r="22" fill="#082a22" fill-opacity=".8" stroke="#3fe0a8" stroke-width="2"/>
+      <path d="M-40 0H-22M22 0H40" stroke="url(#gold)" stroke-width="2"/>
+      <circle cx="-31" r="3" fill="#ffd66f"><animate attributeName="cx" values="-40;-22;-40" dur="3s" repeatCount="indefinite"/></circle>
+      <circle cx="31" r="3" fill="#ffd66f"><animate attributeName="cx" values="22;40;22" dur="3s" repeatCount="indefinite"/></circle>
+      <text x="-62" y="4" fill="#f0d7ff">NKH</text>
+      <text x="0" y="4" fill="#ffd8d3">SIS</text>
+      <text x="62" y="4" fill="#c8ffe9">BRO</text>
+    </g>
+
+    <!-- verified shield -->
+    <g transform="translate(1100 80)">
+      <animateTransform attributeName="transform" type="translate" values="1100 80;1100 72;1100 80" dur="6s" repeatCount="indefinite"/>
+      <path d="M0 -30L26 -20V4C26 20 14 30 0 36C-14 30 -26 20 -26 4V-20Z" fill="#082a22" fill-opacity=".85" stroke="url(#gold)" stroke-width="2.5" filter="url(#glow)"/>
+      <path d="M-11 3l8 8 15-17" fill="none" stroke="#3fe0a8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- identity panel -->
+    <g filter="url(#shadow)">
+      <rect x="56" y="52" width="610" height="316" rx="28" fill="#060a25" fill-opacity=".62" stroke="url(#gold)" stroke-opacity=".82"/>
+      <rect x="68" y="64" width="586" height="292" rx="22" fill="url(#glass)" stroke="#d38cff" stroke-opacity=".26"/>
+    </g>
+    <path d="M96 100H300" stroke="url(#gold)" stroke-width="2"/>
+    <circle cx="96" cy="100" r="5" fill="#3fe0a8" filter="url(#glow)">
+      <animate attributeName="opacity" values=".3;1;.3" dur="1.6s" repeatCount="indefinite"/>
+    </circle>
+    <text x="114" y="106" fill="#f9d777" font-family="'JetBrains Mono', Consolas, monospace" font-size="13" letter-spacing="3">ID-VERIFIED / THREE PRIVATE SPACES</text>
+    <text x="92" y="196" fill="url(#gold)" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="86" font-weight="800" letter-spacing="6">UMMAH</text>
+    <text x="96" y="238" fill="#fff9e8" font-family="'JetBrains Mono', Consolas, monospace" font-size="18" font-weight="700" letter-spacing="4">VERIFIED MUSLIM COMMUNITY</text>
+    <text x="96" y="276" fill="#d9c7f2" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="17">Marriage with a wali in the loop. Circles for moms and dads.</text>
+
+    <g transform="translate(96 302)">
+      <rect width="112" height="38" rx="19" fill="#160f38" fill-opacity=".78" stroke="#d34cff" stroke-opacity=".72"/>
+      <circle cx="20" cy="19" r="5" fill="#d952ff" filter="url(#glow)"><animate attributeName="opacity" values=".3;1;.3" dur="1.4s" repeatCount="indefinite"/></circle>
+      <text x="34" y="24" fill="#f0d7ff" font-family="'JetBrains Mono', Consolas, monospace" font-size="11" letter-spacing="1.2">NIKAH</text>
+    </g>
+    <g transform="translate(222 302)">
+      <rect width="146" height="38" rx="19" fill="#2a1520" fill-opacity=".78" stroke="#f0a7a0" stroke-opacity=".7"/>
+      <text x="20" y="24" fill="#ffd8d3" font-family="'JetBrains Mono', Consolas, monospace" font-size="11" letter-spacing="1.2">SISTERHOOD</text>
+    </g>
+    <g transform="translate(382 302)">
+      <rect width="154" height="38" rx="19" fill="#082a22" fill-opacity=".78" stroke="#3fe0a8" stroke-opacity=".7"/>
+      <text x="20" y="24" fill="#c8ffe9" font-family="'JetBrains Mono', Consolas, monospace" font-size="11" letter-spacing="1.2">BROTHERHOOD</text>
+    </g>
+
+    <rect x="0" y="0" width="1200" height="420" rx="34" fill="none" stroke="url(#gold)" stroke-width="2"/>
+    <rect x="10" y="10" width="1180" height="400" rx="27" fill="none" stroke="#c44fff" stroke-opacity=".16"/>
+    <rect x="0" y="-45" width="1200" height="34" fill="#f7cf68" opacity=".045"><animate attributeName="y" values="-45;450" dur="8s" repeatCount="indefinite"/></rect>
+  </g>
+</svg>
